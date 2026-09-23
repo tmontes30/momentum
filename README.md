@@ -17,8 +17,8 @@ y registro de pesos para ver el progreso semana a semana. Es HTML/CSS/JS puro, s
 4. En Firestore → pestaña **Reglas** → pega el contenido de [`firestore.rules`](firestore.rules) → **Publicar**.
 5. ⚙️ **Configuración del proyecto** → *Tus apps* → ícono web `</>` → registra la app (sin Hosting) → copia el objeto `firebaseConfig`
    y pégalo en [`js/firebase-config.js`](js/firebase-config.js).
-6. **Authentication → Configuración → Dominios autorizados** → agrega `tmontes30.github.io`
-   (`localhost` ya viene autorizado para probar en tu computador).
+6. **Authentication → Configuración → Dominios autorizados** → agrega `cavedevz.com` y `tmontes30.github.io`
+   (la cuenta de GitHub redirige a su dominio propio `cavedevz.com`; `localhost` ya viene autorizado para probar en tu computador).
 
 ## 2. Probar en tu computador
 
@@ -34,7 +34,7 @@ Abre <http://localhost:8080>. En Chrome o Edge puedes usar las DevTools (F12 →
 1. En <https://github.com/new> crea el repositorio `fitboda` (público) en tu cuenta `tmontes30`.
 2. En el repo: **Add file → Upload files** → arrastra **todo el contenido** de esta carpeta (incluidas las carpetas `css`, `js` e `icons`) → *Commit changes*.
 3. **Settings → Pages** → *Source: Deploy from a branch* → rama `main`, carpeta `/ (root)` → Save.
-4. En 1–2 minutos queda en **https://tmontes30.github.io/fitboda/**.
+4. En 1–2 minutos queda en **https://cavedevz.com/fitboda/** (`tmontes30.github.io/fitboda/` redirige ahí).
 
 **Con Git** (si lo instalas: <https://git-scm.com>):
 ```powershell

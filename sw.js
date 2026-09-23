@@ -1,6 +1,6 @@
 // Service worker: red primero y caché como respaldo, así siempre se ve la última versión publicada
 // y la interfaz igual abre si no hay conexión en el gimnasio.
-const CACHE = "fitboda-v1";
+const CACHE = "momentum-v1";
 const SHELL = [
   "./", "./index.html", "./css/styles.css", "./manifest.webmanifest",
   "./js/app.js", "./js/firebase.js", "./js/firebase-config.js", "./js/db.js", "./js/state.js",

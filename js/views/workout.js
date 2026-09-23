@@ -2,10 +2,11 @@ import { EXERCISES, DAYS, DAY_KEYS, prescription, supersetLabel } from "../progr
 import { exerciseHistory, suggestion, summarizeSets, workingWeight, fmtKg } from "../calc.js";
 import { addSession } from "../db.js";
 import { state, program, sessionsInWeek, nextDay } from "../state.js";
-import { esc, go, toast, fmtDate, storage, alertDone } from "../ui.js";
+import { esc, go, toast, fmtDate, storage, alertDone, icon } from "../ui.js";
+import { dayCard } from "./home.js";
 
 const DRAFT_MAX_AGE = 12 * 3600 * 1000;
-const TREND_ICON = { up: "↑", keep: "→", down: "↓", start: "★" };
+const TREND_ICON = { up: "up", keep: "flat", down: "down", start: "info" };
 
 let teardown = null;
 
@@ -18,7 +19,7 @@ export function render(el, dayKey) {
 
   const day = DAYS[dayKey];
   const { week, phase } = program();
-  const draftKey = `fitboda-draft-${state.user.uid}-${dayKey}`;
+  const draftKey = `momentum-draft-${state.user.uid}-${dayKey}`;
 
   let draft = storage.get(draftKey);
   if (!draft || draft.week !== week || Date.now() - draft.startedAt > DRAFT_MAX_AGE) {
@@ -31,16 +32,16 @@ export function render(el, dayKey) {
   el.innerHTML = `
     <div class="screen workout">
       <header class="top sticky">
-        <a class="icon-btn" href="#/home" aria-label="Volver">←</a>
-        <div class="grow"><h1 class="h-sm">${day.icon} ${day.name}</h1>
-          <p class="muted small">Semana ${week} · Fase ${phase.n} ${phase.name}${phase.deload ? " · Descarga" : ""}</p></div>
-        <button class="icon-btn" id="reset" aria-label="Reiniciar entrenamiento" title="Reiniciar">↺</button>
+        <a class="icon-btn" href="#/home" aria-label="Volver">${icon("back")}</a>
+        <div class="grow"><h1 class="h-sm">${day.name}</h1>
+          <p class="muted small">Día ${dayKey} · Semana ${week} · ${phase.name}${phase.deload ? " · Descarga" : ""}</p></div>
+        <button class="icon-btn" id="reset" aria-label="Reiniciar entrenamiento" title="Reiniciar">${icon("reset")}</button>
       </header>
-      <details class="card warmup"><summary>🔥 Calentamiento (5–8 min)</summary><p>${day.warmup}</p></details>
-      ${phase.superset ? `<div class="notice">⚡ <b>Superseries:</b> haz A1 y A2 seguidos, descansa y repite. Luego B1/B2, etc.</div>` : ""}
+      <details class="card warmup"><summary>${icon("timer")} Calentamiento · 5–8 min</summary><p>${day.warmup}</p></details>
+      ${phase.superset ? `<div class="notice">${icon("zap")}<p><b>Superseries.</b> Haz A1 y A2 seguidos, descansa y repite. Luego B1/B2, etc.</p></div>` : ""}
       <div id="list">${draft.items.map((it, i) => cardHTML(it, i, phase)).join("")}</div>
-      ${finisher ? `<div class="card"><h3>🏁 Finisher</h3><p class="muted">${finisher}</p></div>` : ""}
-      <p class="small muted center">Toca ✓ al terminar cada serie para iniciar el descanso.</p>
+      ${finisher ? `<div class="card"><h3 class="h-ico">${icon("flag")} Finisher</h3><p class="muted">${finisher}</p></div>` : ""}
+      <p class="small muted center">Marca cada serie al terminarla para iniciar el descanso.</p>
     </div>
     <div class="rest-bar" id="rest" hidden>
       <span>Descanso</span><b id="rest-time">0:00</b>
@@ -73,7 +74,7 @@ export function render(el, dayKey) {
   const tick = () => {
     const left = Math.max(0, Math.ceil((restEnd - Date.now()) / 1000));
     restTime.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
-    if (left <= 0) { stopRest(); alertDone(); toast("¡A la siguiente serie! 💪"); }
+    if (left <= 0) { stopRest(); alertDone(); toast("Descanso terminado. Siguiente serie."); }
   };
   const startRest = (secs) => {
     restEnd = Date.now() + secs * 1000;
@@ -157,7 +158,7 @@ export function render(el, dayKey) {
         sets: it.sets.filter((x) => x.done).map((x) => ({ kg: Number(x.kg) || 0, reps: Number(x.reps) || 0, done: true })),
       }))
       .filter((it) => it.sets.length);
-    if (!exercises.length) return toast("Marca con ✓ al menos una serie antes de terminar.");
+    if (!exercises.length) return toast("Marca al menos una serie como completada antes de terminar.");
     const pending = draft.items.reduce((n, it) => n + it.sets.filter((x) => !x.done).length, 0);
     if (pending && !confirm(`Quedan ${pending} series sin marcar. ¿Terminar igual?`)) return;
 
@@ -183,7 +184,7 @@ export function render(el, dayKey) {
   }
 
   teardown = () => { clearInterval(timer); ac.abort(); };
-  // Siempre desmonta la instancia vigente (el botón ↺ vuelve a llamar a render).
+  // Siempre desmonta la instancia vigente (el botón de reinicio vuelve a llamar a render).
   return () => { teardown?.(); teardown = null; };
 }
 
@@ -214,7 +215,7 @@ function cardHTML(item, i, phase) {
       <span class="set-n">${s + 1}</span>
       ${hasKg ? numField("kg", set.kg, "kg") : `<span class="muted small center">${ex.type === "time" ? "tiempo" : "peso corporal"}</span>`}
       ${numField("reps", set.reps, unit)}
-      <button class="check" data-act="done" aria-label="Serie ${s + 1} lista">✓</button>
+      <button class="check" data-act="done" aria-label="Serie ${s + 1} lista">${icon("check")}</button>
     </div>`).join("");
 
   return `
@@ -222,10 +223,10 @@ function cardHTML(item, i, phase) {
       <div class="ex-head">
         ${ss ? `<span class="ss">${ss}</span>` : ""}
         <div class="grow"><h3>${ex.name}</h3><small class="muted">${ex.muscle} · ${ex.equip}</small></div>
-        ${ex.alt ? `<button class="icon-btn" data-act="swap" aria-label="Cambiar por ${EXERCISES[ex.alt].name}" title="Máquina ocupada: cambiar ejercicio">⇄</button>` : ""}
+        ${ex.alt ? `<button class="icon-btn" data-act="swap" aria-label="Cambiar por ${EXERCISES[ex.alt].name}" title="Máquina ocupada: cambiar ejercicio">${icon("swap")}</button>` : ""}
       </div>
       <div class="ex-rx"><b>${rx.sets} × ${rx.min}–${rx.max} ${unit}</b> · descanso ${rx.rest} s${ex.perSide ? " · kg por mancuerna/lado" : ""}</div>
-      <div class="ex-sug trend-${sug.trend}">${TREND_ICON[sug.trend]} ${sug.kg != null ? `<b>${fmtKg(sug.kg)} kg</b> · ` : ""}${sug.note}</div>
+      <div class="ex-sug trend-${sug.trend}">${icon(TREND_ICON[sug.trend])}<span>${sug.kg != null ? `<b>${fmtKg(sug.kg)} kg</b> · ` : ""}${sug.note}</span></div>
       ${last ? `<div class="ex-last">Última vez (${fmtDate(last.date)}): ${summarizeSets(item.exId, last.sets)}</div>` : ""}
       <details class="tip"><summary>Técnica</summary><p>${ex.tip}</p></details>
       <div class="sets ${hasKg ? "" : "no-kg"}">${rows}</div>
@@ -263,16 +264,16 @@ function renderSummary(el, session, prs) {
   const left = 3 - new Set(sessionsInWeek(session.week).map((s) => s.dayKey)).size;
   el.innerHTML = `
     <div class="screen center summary">
-      <div class="logo">🎉</div>
-      <h1>¡Buen trabajo!</h1>
-      <p class="muted">${DAYS[session.dayKey].name} completado</p>
+      <div class="summary-mark">${icon("done")}</div>
+      <h1>Entrenamiento completado</h1>
+      <p class="muted">${DAYS[session.dayKey].name} · ${fmtDate(session.date, { weekday: "long", day: "numeric", month: "long" })}</p>
       <div class="tiles">
         <div class="tile"><b>${session.durationMin}</b><span>minutos</span></div>
         <div class="tile"><b>${sets}</b><span>series</span></div>
         <div class="tile"><b>${Math.round(volume).toLocaleString("es")}</b><span>kg levantados</span></div>
       </div>
-      ${prs.length ? `<div class="card left"><h3>🏆 Nuevos récords</h3>${prs.map((p) => `<p>${p.name}: <b>${fmtKg(p.kg)} kg</b> <span class="trend-up">(+${fmtKg(p.diff)})</span></p>`).join("")}</div>` : ""}
-      <p class="muted">${left > 0 ? `Te ${left === 1 ? "queda 1 entrenamiento" : `quedan ${left} entrenamientos`} esta semana.` : "¡Semana completa! 🔥"}</p>
+      ${prs.length ? `<div class="card left"><h3 class="h-ico">${icon("trophy")} Nuevos récords</h3>${prs.map((p) => `<p>${p.name}: <b>${fmtKg(p.kg)} kg</b> <span class="trend-up">(+${fmtKg(p.diff)})</span></p>`).join("")}</div>` : ""}
+      <p class="muted">${left > 0 ? `Te ${left === 1 ? "queda 1 entrenamiento" : `quedan ${left} entrenamientos`} esta semana.` : "Semana completa."}</p>
       <button class="btn btn-primary btn-lg btn-block" id="home">Volver al inicio</button>
     </div>`;
   el.querySelector("#home").addEventListener("click", () => go("#/home"));
@@ -284,13 +285,9 @@ function renderPicker(el) {
   const next = nextDay();
   el.innerHTML = `
     <div class="screen">
-      <h1>¿Qué toca hoy?</h1>
+      <h1>Elige tu entrenamiento</h1>
       <p class="muted">Haz los 3 días en la semana, en el orden que te acomode. Deja al menos un día de descanso entre Piernas y Core.</p>
-      <div class="day-list">${DAY_KEYS.map((k) => `
-        <a class="day-card ${done.has(k) ? "done" : ""} ${k === next ? "next" : ""}" href="#/workout/${k}">
-          <span class="day-icon">${DAYS[k].icon}</span>
-          <span class="day-body"><b>Día ${k} · ${DAYS[k].name}</b><small>${DAYS[k].exercises.map((id) => EXERCISES[id].name).slice(0, 3).join(", ")}…</small></span>
-          <span class="day-state">${done.has(k) ? "✓" : k === next ? "Siguiente" : ""}</span>
-        </a>`).join("")}</div>
+      <div class="day-list">${DAY_KEYS.map((k) => dayCard(k, done.has(k), k === next,
+        DAYS[k].exercises.map((id) => EXERCISES[id].name).slice(0, 3).join(", ") + "…")).join("")}</div>
     </div>`;
 }

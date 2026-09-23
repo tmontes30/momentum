@@ -47,7 +47,7 @@ export function render(el) {
         state.bodyweight.push(bw);
       }
       state.profile = { ...p, ...data };
-      toast("Perfil actualizado ✓");
+      toast("Perfil actualizado");
       render(el);
     } catch (err) {
       console.error(err);

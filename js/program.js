@@ -102,17 +102,17 @@ export const EXERCISES = {
 
 export const DAYS = {
   A: {
-    name: "Piernas y glúteos", short: "Piernas", icon: "🦵",
+    name: "Piernas y glúteos", short: "Piernas",
     warmup: "5 min de bicicleta o elíptica + 10 sentadillas sin peso + 10 puentes de glúteo.",
     exercises: ["leg_press", "goblet_squat", "hip_thrust", "leg_curl", "leg_ext", "abductor", "calf_raise"],
   },
   B: {
-    name: "Brazos y tren superior", short: "Brazos", icon: "💪",
+    name: "Brazos y tren superior", short: "Brazos",
     warmup: "5 min de remo o elíptica + círculos de brazos + 1 serie liviana de jalón y de press.",
     exercises: ["lat_pulldown", "db_press", "cable_row", "shoulder_press", "lateral_raise", "biceps_curl", "triceps_pushdown", "hammer_curl"],
   },
   C: {
-    name: "Core + full body", short: "Core", icon: "🔥",
+    name: "Core + full body", short: "Core",
     warmup: "5 min de caminadora inclinada + 10 bisagras de cadera + 20 s de plancha.",
     exercises: ["rdl", "lunges", "db_row", "pushup", "plank", "cable_crunch", "leg_raise", "pallof"],
     finisher: "Circuito final: 4 rondas de 30 s intensos + 30 s suaves en bicicleta, remo o escaladora.",
@@ -130,9 +130,9 @@ export const PHASES = [
   { n: 3, name: "Fuerza y tono", to: 20, sets: 4, reps: [8, 10], time: [40, 60], rest: 90,
     goal: "Subir las cargas. Menos repeticiones, más peso y buena técnica." },
   { n: 4, name: "Definición", to: 28, sets: 3, reps: [12, 15], time: [45, 60], rest: 45, superset: true,
-    goal: "Quemar más. Ejercicios en superseries (A1 → A2 sin descanso) y circuito final." },
+    goal: "Quemar más. Ejercicios en superseries (A1 y A2 sin descanso entre ellos) y circuito final." },
   { n: 5, name: "Afinado final", to: 30, sets: 2, reps: [10, 12], time: [30, 45], rest: 60,
-    goal: "Mantener lo ganado con menos volumen para llegar frescos y con energía al gran día." },
+    goal: "Mantener lo ganado con menos volumen para llegar en tu mejor forma a la fecha objetivo." },
 ];
 
 const REF_WEEKS = 30;
@@ -154,7 +154,7 @@ export function totalWeeks(startDate, targetDate) {
 
 export function phaseFor(week, total) {
   if (week > total) {
-    return { ...PHASES[2], name: "Mantención", goal: "¡Lo lograron! Sigue entrenando para mantener lo ganado.", deload: false };
+    return { ...PHASES[2], name: "Mantención", goal: "Meta alcanzada. Sigue entrenando para mantener lo ganado.", deload: false };
   }
   const refWeek = (week / total) * REF_WEEKS;
   const phase = PHASES.find((p) => refWeek <= p.to) || PHASES[PHASES.length - 1];

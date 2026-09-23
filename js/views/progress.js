@@ -2,7 +2,7 @@ import { EXERCISES, DAYS } from "../program.js";
 import { exerciseHistory, workingWeight, summarizeSets, fmtKg } from "../calc.js";
 import { addBodyweight, deleteBodyweight, deleteSession } from "../db.js";
 import { state, todayISO, sessionWeek } from "../state.js";
-import { esc, toast, fmtDate, storage } from "../ui.js";
+import { esc, toast, fmtDate, storage, icon } from "../ui.js";
 
 const CHART_URL = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
 let chartLib = null;
@@ -17,7 +17,7 @@ function loadChart() {
   return chartLib;
 }
 
-const SEL_KEY = "fitboda-progress-ex";
+const SEL_KEY = "momentum-progress-ex";
 
 export async function render(el) {
   let charts = [];
@@ -56,7 +56,7 @@ export async function render(el) {
             <h4 class="chart-title">Volumen por semana (kg × reps)</h4>
             <div class="chart"><canvas id="c-vol" role="img" aria-label="Volumen semanal"></canvas></div>
             <details class="table-view"><summary>Ver como tabla</summary><div id="ex-table"></div></details>`
-          : `<p class="muted">Aún no hay entrenamientos. Completa tu primer día y aquí verás cómo suben tus pesos semana a semana. 💪</p>`}
+          : `<p class="muted">Aún no hay entrenamientos. Completa tu primer día y aquí verás cómo suben tus pesos semana a semana.</p>`}
         </section>
 
         <section class="card">
@@ -70,15 +70,15 @@ export async function render(el) {
           </form>
           ${bw.length ? `<details class="table-view"><summary>Registros (${bw.length})</summary>
             <ul class="plain-list">${[...bw].reverse().map((b) => `<li><span>${fmtDate(b.date, { day: "numeric", month: "short", year: "numeric" })}</span><b>${fmtKg(b.kg)} kg</b>
-              <button class="icon-btn sm" data-del-bw="${b.id}" aria-label="Borrar registro">✕</button></li>`).join("")}</ul></details>` : ""}
+              <button class="icon-btn sm" data-del-bw="${b.id}" aria-label="Borrar registro">${icon("close")}</button></li>`).join("")}</ul></details>` : ""}
         </section>
 
         <section class="card">
           <h3>Historial</h3>
           ${recent.length ? `<ul class="plain-list">${recent.map((s) => `
-            <li><span><b>${DAYS[s.dayKey]?.icon || ""} ${DAYS[s.dayKey]?.name || s.dayKey}</b><br>
+            <li><span><b>${DAYS[s.dayKey]?.name || s.dayKey}</b><br>
               <small class="muted">${fmtDate(s.date, { weekday: "short", day: "numeric", month: "short" })}${sessionWeek(s) > 0 ? ` · semana ${sessionWeek(s)}` : ""} · ${s.exercises.length} ejercicios · ${s.durationMin} min</small></span>
-              <button class="icon-btn sm" data-del-session="${s.id}" aria-label="Borrar entrenamiento">✕</button></li>`).join("")}</ul>`
+              <button class="icon-btn sm" data-del-session="${s.id}" aria-label="Borrar entrenamiento">${icon("close")}</button></li>`).join("")}</ul>`
           : `<p class="muted">Sin entrenamientos todavía.</p>`}
         </section>
       </div>`;

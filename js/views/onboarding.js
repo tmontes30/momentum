@@ -31,8 +31,11 @@ export function goalFields(p = {}) {
     <div class="field"><span>Experiencia en el gimnasio</span>${seg("level", [["principiante", "Principiante"], ["intermedio", "Intermedio"]], p.level || "principiante")}
       <small class="muted">Principiante: menos de 6 meses entrenando de forma constante.</small></div>
     <div class="field"><span>Objetivo principal</span>${seg("goal", [["tonificar", "Tonificar"], ["bajar grasa", "Bajar grasa"], ["ganar músculo", "Ganar músculo"]], p.goal || "tonificar")}</div>
-    <label class="field"><span>Fecha del matrimonio (u objetivo)</span>
-      <input type="date" name="targetDate" value="${esc(p.targetDate || addMonthsISO(todayISO(), 7))}" required min="${todayISO()}"></label>`;
+    <label class="field"><span>¿Para qué entrenas? <small class="muted">(opcional)</small></span>
+      <input name="eventName" value="${esc(p.eventName)}" maxlength="30" placeholder="Ej: mi matrimonio, un viaje, una maratón"></label>
+    <label class="field"><span>Fecha objetivo</span>
+      <input type="date" name="targetDate" value="${esc(p.targetDate || addMonthsISO(todayISO(), 7))}" required min="${todayISO()}">
+      <small class="muted">El plan se distribuye en las semanas que quedan hasta esta fecha.</small></label>`;
 }
 
 export function readProfileForm(form) {
@@ -67,17 +70,17 @@ export function render(el) {
     const steps = [1, 2, 3].map((n) => `<i class="${n <= step ? "on" : ""}"></i>`).join("");
     let body = "";
     if (step === 1) {
-      body = `<h1>Hola 👋</h1><p class="muted">Cuéntanos de ti para calcular tu plan.</p>
+      body = `<p class="eyebrow">Paso 1 de 3</p><h1>Sobre ti</h1><p class="muted">Con estos datos calculamos tu plan y tus cargas iniciales.</p>
         <form id="f" class="form">${aboutFields(draft)}
           <button class="btn btn-primary btn-lg btn-block">Siguiente</button></form>`;
     } else if (step === 2) {
-      body = `<h1>Tu objetivo 🎯</h1><p class="muted">Con esto ajustamos series, repeticiones y cargas.</p>
+      body = `<p class="eyebrow">Paso 2 de 3</p><h1>Tu objetivo</h1><p class="muted">Con esto ajustamos series, repeticiones y cargas.</p>
         <form id="f" class="form">${goalFields(draft)}
           <div class="row2"><button type="button" class="btn" id="back">Atrás</button>
           <button class="btn btn-primary">Ver mi plan</button></div></form>`;
     } else {
       const weeks = totalWeeks(todayISO(), draft.targetDate);
-      body = `<h1>Tu plan, ${esc(draft.name)} ✨</h1>
+      body = `<p class="eyebrow">Paso 3 de 3</p><h1>Tu plan, ${esc(draft.name)}</h1>
         <p class="muted">${weeks} semanas · 3 entrenamientos por semana · 5 fases progresivas</p>
         ${metricsHTML(draft)}
         <div class="card">
@@ -89,7 +92,7 @@ export function render(el) {
           </ol>
         </div>
         <div class="row2"><button type="button" class="btn" id="back">Atrás</button>
-          <button class="btn btn-primary" id="start">¡Empezar!</button></div>`;
+          <button class="btn btn-primary" id="start">Comenzar</button></div>`;
     }
     el.innerHTML = `<div class="screen"><div class="stepper-dots">${steps}</div>${body}</div>`;
 

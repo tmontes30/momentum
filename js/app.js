@@ -1,6 +1,6 @@
 import { isConfigured, onUser } from "./firebase.js";
 import { state } from "./state.js";
-import { esc } from "./ui.js";
+import { esc, logo } from "./ui.js";
 import * as login from "./views/login.js";
 import * as onboarding from "./views/onboarding.js";
 import * as home from "./views/home.js";
@@ -50,7 +50,7 @@ async function route() {
 function renderSetup() {
   main.innerHTML = `
     <div class="screen center">
-      <div class="logo">💍💪</div>
+      ${logo(56)}
       <h1>Falta configurar Firebase</h1>
       <p class="muted">Abre <code>js/firebase-config.js</code> y pega la configuración de tu proyecto Firebase.
       Los pasos están en el archivo <code>README.md</code>.</p>

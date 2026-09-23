@@ -1,7 +1,16 @@
 import { DAYS, DAY_KEYS } from "../program.js";
 import { fmtKg } from "../calc.js";
 import { state, program, sessionsInWeek, nextDay, daysUntil, completeWeeks } from "../state.js";
-import { esc } from "../ui.js";
+import { esc, icon } from "../ui.js";
+
+export function dayCard(k, done, isNext, subtitle) {
+  const d = DAYS[k];
+  return `<a class="day-card ${done ? "done" : ""} ${isNext ? "next" : ""}" href="#/workout/${k}">
+    <span class="day-icon">${done ? icon("check") : k}</span>
+    <span class="day-body"><b>${d.name}</b><small>${subtitle}</small></span>
+    <span class="day-state">${done ? "Completado" : isNext ? "Siguiente" : ""}</span>
+  </a>`;
+}
 
 export function render(el) {
   const p = state.profile;
@@ -10,24 +19,18 @@ export function render(el) {
   const doneKeys = new Set(sessionsInWeek(week).map((s) => s.dayKey));
   const next = nextDay();
   const pct = Math.min(100, Math.round((Math.min(week, total) / total) * 100));
+  const eventName = p.eventName ? esc(p.eventName) : "tu fecha objetivo";
 
   const bw = state.bodyweight;
   const delta = bw.length >= 2 ? bw[bw.length - 1].kg - bw[0].kg : null;
 
   const countdown = days > 0
-    ? `<div class="big">${days}</div><div>días para el gran día 💍</div>`
-    : days === 0 ? `<div class="big">¡Hoy!</div><div>Felicidades 💍🎉</div>`
-    : `<div class="big">🎉</div><div>¡Lo lograron! Sigue en modo mantención</div>`;
+    ? `<div class="big">${days}</div><div class="hero-sub">días para ${eventName}</div>`
+    : days === 0 ? `<div class="big">Hoy</div><div class="hero-sub">Es el día de ${eventName}. Mucho éxito.</div>`
+    : `<div class="big">Meta alcanzada</div><div class="hero-sub">Sigue entrenando en modo mantención.</div>`;
 
-  const cards = DAY_KEYS.map((k) => {
-    const d = DAYS[k];
-    const done = doneKeys.has(k);
-    return `<a class="day-card ${done ? "done" : ""} ${k === next ? "next" : ""}" href="#/workout/${k}">
-      <span class="day-icon">${d.icon}</span>
-      <span class="day-body"><b>Día ${k} · ${d.name}</b><small>${d.exercises.length} ejercicios · ~50 min</small></span>
-      <span class="day-state">${done ? "✓" : k === next ? "Siguiente" : ""}</span>
-    </a>`;
-  }).join("");
+  const cards = DAY_KEYS.map((k) =>
+    dayCard(k, doneKeys.has(k), k === next, `Día ${k} · ${DAYS[k].exercises.length} ejercicios · ~50 min`)).join("");
 
   el.innerHTML = `
     <div class="screen">
@@ -42,16 +45,17 @@ export function render(el) {
         <div class="hero-foot"><span>Semana ${week} de ${total}</span><span>Fase ${phase.n} · ${phase.name}</span></div>
       </section>
 
-      ${phase.deload ? `<div class="notice">🧘 <b>Semana de descarga:</b> menos series para que el cuerpo se recupere. Mantén los pesos.</div>` : ""}
+      ${phase.deload ? `<div class="notice">${icon("pause")}<p><b>Semana de descarga.</b> Menos series para que el cuerpo se recupere. Mantén los pesos.</p></div>` : ""}
 
       <section>
-        <div class="section-head"><h2>Esta semana</h2><span class="muted small">${doneKeys.size}/3</span></div>
+        <div class="section-head"><h2>Esta semana</h2><span class="muted small">${doneKeys.size} de 3</span></div>
         <div class="day-list">${cards}</div>
-        ${!next ? `<p class="center muted small">¡Semana completa! 🔥 Descansa o repite el día que quieras.</p>` : ""}
+        ${!next ? `<p class="center muted small">Semana completa. Descansa o repite el día que prefieras.</p>` : ""}
       </section>
 
       <section class="card">
-        <h3>Fase ${phase.n}: ${phase.name}</h3>
+        <p class="eyebrow">Fase actual</p>
+        <h3>${phase.name}</h3>
         <p class="muted">${phase.goal}</p>
         <p class="small">${phase.sets} series · ${phase.reps[0]}–${phase.reps[1]} reps · descanso ${phase.rest} s</p>
       </section>

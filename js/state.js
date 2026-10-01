@@ -1,4 +1,4 @@
-import { weekNumber, totalWeeks, phaseFor, DAY_KEYS } from "./program.js";
+import { weekNumber, weekOf, totalWeeks, phaseFor, DAY_KEYS } from "./program.js";
 
 export const state = {
   user: null,
@@ -14,12 +14,18 @@ export function program(today = new Date()) {
   return { week, total, phase: phaseFor(week, total) };
 }
 
-// Semana del programa a la que pertenece una sesión, según su fecha (≤ 0 si fue antes de reiniciar el programa).
+// Semana del programa a la que pertenece una sesión, según su fecha (≤ 0 si es anterior al inicio del programa).
 export function sessionWeek(s) {
-  const start = new Date(state.profile.startDate + "T00:00:00");
-  const d = new Date(s.date);
-  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  return Math.floor(Math.round((day - start) / 86400000) / 7) + 1;
+  return weekOf(state.profile.startDate, new Date(s.date));
+}
+
+export function sortSessions() {
+  state.sessions.sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+// Fecha local 'YYYY-MM-DD' de un Date.
+export function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function sessionsInWeek(week) {
@@ -40,8 +46,7 @@ export function daysUntil(dateStr) {
 }
 
 export function todayISO() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return isoDate(new Date());
 }
 
 export function addMonthsISO(iso, months) {

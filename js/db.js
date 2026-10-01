@@ -1,5 +1,5 @@
 import {
-  doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc, query, orderBy, serverTimestamp,
+  doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, deleteDoc, query, orderBy, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "./firebase.js";
 
@@ -24,6 +24,11 @@ export async function listSessions(uid) {
 export async function addSession(uid, session) {
   const ref = await addDoc(sessionsRef(uid), { ...session, createdAt: serverTimestamp() });
   return { id: ref.id, ...session };
+}
+
+export async function updateSession(uid, id, data) {
+  await updateDoc(doc(db, "users", uid, "sessions", id), { ...data, updatedAt: serverTimestamp() });
+  return { id, ...data };
 }
 
 export function deleteSession(uid, id) {

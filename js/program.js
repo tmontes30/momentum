@@ -138,17 +138,38 @@ export const PHASES = [
 const REF_WEEKS = 30;
 const REF_DELOADS = [8, 16, 24];
 
-// Semana 1 = la semana de startDate.
+// Las semanas van de lunes a domingo. Semana 1 = la semana (lunes a domingo) que contiene startDate.
+export function toDate(value) {
+  if (value instanceof Date) return value;
+  return new Date(value.length <= 10 ? value + "T00:00:00" : value);
+}
+
+export function mondayOf(value) {
+  const d = stripTime(toDate(value));
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d;
+}
+
+const dayDiff = (a, b) => Math.round((stripTime(a) - stripTime(b)) / 86400000);
+
+// Semana del programa para una fecha cualquiera (≤ 0 si es anterior al inicio).
+export function weekOf(startDate, date) {
+  return Math.floor(dayDiff(toDate(date), mondayOf(startDate)) / 7) + 1;
+}
+
 export function weekNumber(startDate, today = new Date()) {
-  const start = new Date(startDate + "T00:00:00");
-  const days = Math.floor((stripTime(today) - start) / 86400000);
-  return Math.max(1, Math.floor(days / 7) + 1);
+  return Math.max(1, weekOf(startDate, today));
+}
+
+// Lunes de la semana `week` del programa.
+export function weekStart(startDate, week) {
+  const d = mondayOf(startDate);
+  d.setDate(d.getDate() + (week - 1) * 7);
+  return d;
 }
 
 export function totalWeeks(startDate, targetDate) {
-  const start = new Date(startDate + "T00:00:00");
-  const end = new Date(targetDate + "T00:00:00");
-  const weeks = Math.ceil((end - start) / (7 * 86400000));
+  const weeks = Math.ceil(dayDiff(toDate(targetDate), mondayOf(startDate)) / 7);
   return Math.min(52, Math.max(8, weeks));
 }
 

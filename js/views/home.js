@@ -1,25 +1,56 @@
-import { DAYS, DAY_KEYS } from "../program.js";
+import { DAYS, DAY_KEYS, phaseFor, weekStart } from "../program.js";
 import { fmtKg } from "../calc.js";
-import { state, program, sessionsInWeek, nextDay, daysUntil, completeWeeks } from "../state.js";
-import { esc, icon } from "../ui.js";
+import { state, program, sessionsInWeek, nextDay, daysUntil, completeWeeks, isoDate as isoOf } from "../state.js";
+import { esc, icon, fmtDate } from "../ui.js";
 
-export function dayCard(k, done, isNext, subtitle) {
+// Tarjeta de un día. Sin href se muestra deshabilitada (semanas futuras).
+export function dayCard(k, { done = false, next = false, subtitle = "", href = null, label = "" } = {}) {
   const d = DAYS[k];
-  return `<a class="day-card ${done ? "done" : ""} ${isNext ? "next" : ""}" href="#/workout/${k}">
+  const tag = href ? "a" : "div";
+  return `<${tag} class="day-card ${done ? "done" : ""} ${next ? "next" : ""} ${href ? "" : "disabled"}" ${href ? `href="${href}"` : ""}>
     <span class="day-icon">${done ? icon("check") : k}</span>
     <span class="day-body"><b>${d.name}</b><small>${subtitle}</small></span>
-    <span class="day-state">${done ? "Completado" : isNext ? "Siguiente" : ""}</span>
-  </a>`;
+    <span class="day-state">${label || (done ? "Completado" : next ? "Siguiente" : "")}</span>
+  </${tag}>`;
 }
 
-export function render(el) {
+// Tarjetas A/B/C de una semana: completado → editar ese entrenamiento; pendiente → registrarlo en esa semana.
+export function weekCards(week, subtitleFor) {
+  const { week: current } = program();
+  const latest = {};
+  for (const s of sessionsInWeek(week)) latest[s.dayKey] = s;
+  const next = week === current ? nextDay() : null;
+  const opensOn = fmtDate(isoOf(weekStart(state.profile.startDate, week)), { day: "numeric", month: "short" });
+
+  return DAY_KEYS.map((k) => {
+    const s = latest[k];
+    if (s) {
+      return dayCard(k, { done: true, href: `#/workout/${k}/s-${s.id}`,
+        subtitle: `${fmtDate(s.date, { weekday: "short", day: "numeric", month: "short" })} · toca para editar` });
+    }
+    if (week > current) return dayCard(k, { subtitle: `Disponible desde el ${opensOn}` });
+    return dayCard(k, { next: k === next, subtitle: subtitleFor(k),
+      href: week === current ? `#/workout/${k}` : `#/workout/${k}/w-${week}`,
+      label: week < current ? "Registrar" : "" });
+  }).join("");
+}
+
+export function render(el, weekParam) {
   const p = state.profile;
-  const { week, total, phase } = program();
+  const { week: current, total, phase: currentPhase } = program();
+  const lastWeek = Math.max(total, current);
+  const week = Math.min(lastWeek, Math.max(1, parseInt(weekParam, 10) || current));
+  const phase = phaseFor(week, total);
+  const isCurrent = week === current;
+
   const days = daysUntil(p.targetDate);
-  const doneKeys = new Set(sessionsInWeek(week).map((s) => s.dayKey));
-  const next = nextDay();
-  const pct = Math.min(100, Math.round((Math.min(week, total) / total) * 100));
+  const doneCount = new Set(sessionsInWeek(week).map((s) => s.dayKey)).size;
+  const pct = Math.min(100, Math.round((Math.min(current, total) / total) * 100));
   const eventName = p.eventName ? esc(p.eventName) : "tu fecha objetivo";
+
+  const start = weekStart(p.startDate, week);
+  const end = new Date(start); end.setDate(end.getDate() + 6);
+  const range = `${fmtDate(isoOf(start), { day: "numeric", month: "short" })} – ${fmtDate(isoOf(end), { day: "numeric", month: "short" })}`;
 
   const bw = state.bodyweight;
   const delta = bw.length >= 2 ? bw[bw.length - 1].kg - bw[0].kg : null;
@@ -29,8 +60,7 @@ export function render(el) {
     : days === 0 ? `<div class="big">Hoy</div><div class="hero-sub">Es el día de ${eventName}. Mucho éxito.</div>`
     : `<div class="big">Meta alcanzada</div><div class="hero-sub">Sigue entrenando en modo mantención.</div>`;
 
-  const cards = DAY_KEYS.map((k) =>
-    dayCard(k, doneKeys.has(k), k === next, `Día ${k} · ${DAYS[k].exercises.length} ejercicios · ~50 min`)).join("");
+  const cards = weekCards(week, (k) => `Día ${k} · ${DAYS[k].exercises.length} ejercicios · ~50 min`);
 
   el.innerHTML = `
     <div class="screen">
@@ -42,19 +72,28 @@ export function render(el) {
       <section class="hero">
         ${countdown}
         <div class="progress"><i style="width:${pct}%"></i></div>
-        <div class="hero-foot"><span>Semana ${week} de ${total}</span><span>Fase ${phase.n} · ${phase.name}</span></div>
+        <div class="hero-foot"><span>Semana ${current} de ${total}</span><span>Fase ${currentPhase.n} · ${currentPhase.name}</span></div>
       </section>
 
-      ${phase.deload ? `<div class="notice">${icon("pause")}<p><b>Semana de descarga.</b> Menos series para que el cuerpo se recupere. Mantén los pesos.</p></div>` : ""}
-
       <section>
-        <div class="section-head"><h2>Esta semana</h2><span class="muted small">${doneKeys.size} de 3</span></div>
+        <div class="week-nav">
+          ${week > 1 ? `<a class="icon-btn" href="#/home/${week - 1}" aria-label="Semana anterior">${icon("back")}</a>`
+            : `<span class="icon-btn" aria-hidden="true" style="visibility:hidden"></span>`}
+          <div class="week-label">
+            <b>${isCurrent ? "Esta semana" : `Semana ${week}`}</b>
+            <small>${isCurrent ? `Semana ${week} · ` : ""}${range} · ${doneCount} de 3</small>
+          </div>
+          ${week < lastWeek ? `<a class="icon-btn" href="#/home/${week + 1}" aria-label="Semana siguiente">${icon("next")}</a>`
+            : `<span class="icon-btn" aria-hidden="true" style="visibility:hidden"></span>`}
+        </div>
+        ${!isCurrent ? `<p class="center"><a class="link" href="#/home">Volver a esta semana</a></p>` : ""}
+        ${phase.deload ? `<div class="notice">${icon("pause")}<p><b>Semana de descarga.</b> Menos series para que el cuerpo se recupere. Mantén los pesos.</p></div>` : ""}
         <div class="day-list">${cards}</div>
-        ${!next ? `<p class="center muted small">Semana completa. Descansa o repite el día que prefieras.</p>` : ""}
+        ${isCurrent && doneCount >= 3 ? `<p class="center muted small">Semana completa. Buen trabajo.</p>` : ""}
       </section>
 
       <section class="card">
-        <p class="eyebrow">Fase actual</p>
+        <p class="eyebrow">${isCurrent ? "Fase actual" : `Fase de la semana ${week}`}</p>
         <h3>${phase.name}</h3>
         <p class="muted">${phase.goal}</p>
         <p class="small">${phase.sets} series · ${phase.reps[0]}–${phase.reps[1]} reps · descanso ${phase.rest} s</p>

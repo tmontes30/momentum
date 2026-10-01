@@ -33,6 +33,9 @@ export function goalFields(p = {}) {
     <div class="field"><span>Objetivo principal</span>${seg("goal", [["tonificar", "Tonificar"], ["bajar grasa", "Bajar grasa"], ["ganar músculo", "Ganar músculo"]], p.goal || "tonificar")}</div>
     <label class="field"><span>¿Para qué entrenas? <small class="muted">(opcional)</small></span>
       <input name="eventName" value="${esc(p.eventName)}" maxlength="30" placeholder="Ej: mi matrimonio, un viaje, una maratón"></label>
+    <label class="field"><span>Inicio del programa</span>
+      <input type="date" name="startDate" value="${esc(p.startDate || todayISO())}" required>
+      <small class="muted">Las semanas van de lunes a domingo. La semana 1 es la que contiene esta fecha: pon el día en que empezaste (o empiezas) a entrenar.</small></label>
     <label class="field"><span>Fecha objetivo</span>
       <input type="date" name="targetDate" value="${esc(p.targetDate || addMonthsISO(todayISO(), 7))}" required min="${todayISO()}">
       <small class="muted">El plan se distribuye en las semanas que quedan hasta esta fecha.</small></label>`;
@@ -79,7 +82,7 @@ export function render(el) {
           <div class="row2"><button type="button" class="btn" id="back">Atrás</button>
           <button class="btn btn-primary">Ver mi plan</button></div></form>`;
     } else {
-      const weeks = totalWeeks(todayISO(), draft.targetDate);
+      const weeks = totalWeeks(draft.startDate || todayISO(), draft.targetDate);
       body = `<p class="eyebrow">Paso 3 de 3</p><h1>Tu plan, ${esc(draft.name)}</h1>
         <p class="muted">${weeks} semanas · 3 entrenamientos por semana · 5 fases progresivas</p>
         ${metricsHTML(draft)}
@@ -110,7 +113,7 @@ export function render(el) {
     el.querySelector("#start")?.addEventListener("click", async (e) => {
       e.target.disabled = true;
       const today = todayISO();
-      const profile = { ...draft, photoURL: state.user.photoURL || "", startDate: today, createdAt: today };
+      const profile = { ...draft, photoURL: state.user.photoURL || "", startDate: draft.startDate || today, createdAt: today };
       try {
         await saveProfile(state.user.uid, profile);
         const bw = await addBodyweight(state.user.uid, { date: today, kg: profile.weightKg });

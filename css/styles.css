@@ -227,6 +227,24 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-
 .day-body small { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .day-state { font-size: 13px; font-weight: 700; color: var(--accent); flex: none; }
 .day-card.done .day-state { color: var(--good); }
+.day-card.disabled { opacity: 0.55; box-shadow: none; }
+.day-card.disabled:active { transform: none; }
+
+.week-nav {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.week-label { flex: 1; text-align: center; display: flex; flex-direction: column; }
+.week-label b { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+.week-label small { color: var(--muted); font-size: 13px; }
+.week-nav .icon-btn { background: var(--surface); border: 1px solid var(--line); }
+
+.date-card { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.date-card > .ico { color: var(--accent); }
+.date-card .grow { display: flex; flex-direction: column; }
+.date-card small { font-size: 12px; }
+.date-card input { width: auto; min-height: 40px; padding: 8px 10px; font-size: 15px; }
+.danger { color: #d92d20; }
+.history-link { flex: 1; min-width: 0; }
 .day-card.done .day-icon { background: var(--good-soft); color: var(--good); }
 
 /* ── Formularios ── */

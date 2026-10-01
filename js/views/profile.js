@@ -26,9 +26,10 @@ export function render(el) {
 
       <section class="card">
         <h3>Programa</h3>
-        <p class="muted">Empezaste el ${fmtDate(p.startDate, { day: "numeric", month: "long", year: "numeric" })}. Vas en la semana ${week} de ${total}.</p>
+        <p class="muted">Empezaste el ${fmtDate(p.startDate, { day: "numeric", month: "long", year: "numeric" })}. Vas en la semana ${week} de ${total} (semanas de lunes a domingo).</p>
+        <p class="small muted">Si la semana no calza con cuando realmente empezaste, corrige "Inicio del programa" en Tus datos. Tus entrenamientos se reordenan solos según su fecha.</p>
         <button class="btn btn-block" id="restart">Reiniciar el programa desde hoy</button>
-        <p class="small muted">Tu historial de pesos se mantiene; solo vuelve a la semana 1.</p>
+        <p class="small muted">Tu historial se mantiene; solo vuelve a la semana 1.</p>
       </section>
 
       <button class="btn btn-block btn-ghost" id="logout">Cerrar sesión</button>

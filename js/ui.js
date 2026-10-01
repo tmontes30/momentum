@@ -1,6 +1,9 @@
 // Íconos de línea (24×24, trazo currentColor).
 const ICONS = {
   back: "M15 18l-6-6 6-6",
+  next: "M9 18l6-6-6-6",
+  calendar: "M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M8 3v4M16 3v4",
+  edit: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
   reset: "M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5",
   swap: "M4 8h15l-4-4M20 16H5l4 4",
   check: "M5 12.5l4.5 4.5L19 7.5",

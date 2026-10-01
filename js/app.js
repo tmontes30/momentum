@@ -16,14 +16,18 @@ const nav = document.getElementById("nav");
 let cleanup = null;
 let ready = false;
 
+let lastView = null;
+
+// #/vista/param1/param2 → { name, params }
 function parseHash() {
-  const [name = "home", param = null] = location.hash.replace(/^#\/?/, "").split("/");
-  return { name: name || "home", param };
+  const [name = "home", ...params] = location.hash.replace(/^#\/?/, "").split("/");
+  return { name: name || "home", params: params.filter(Boolean) };
 }
 
 async function route() {
   if (!ready) return;
-  let { name, param } = parseHash();
+  let { name, params } = parseHash();
+  const param = params[0] ?? null;
 
   if (!state.user) name = "login";
   else if (!state.profile) name = "onboarding";
@@ -31,7 +35,9 @@ async function route() {
 
   if (typeof cleanup === "function") cleanup();
   cleanup = null;
-  window.scrollTo(0, 0);
+  // Al moverse entre semanas en Inicio no se pierde la posición de scroll.
+  if (name !== lastView || name !== "home") window.scrollTo(0, 0);
+  lastView = name;
 
   const showNav = NAV_VIEWS.includes(name) && !(name === "workout" && param);
   nav.hidden = !showNav;
@@ -39,7 +45,7 @@ async function route() {
   nav.querySelectorAll("a").forEach((a) => a.classList.toggle("active", a.dataset.view === name));
 
   try {
-    cleanup = await views[name].render(main, param);
+    cleanup = await views[name].render(main, ...params);
   } catch (err) {
     console.error(err);
     main.innerHTML = `<div class="screen center"><p class="muted">Algo salió mal: ${esc(err.message)}</p>

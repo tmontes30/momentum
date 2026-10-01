@@ -93,8 +93,22 @@ users/{uid}/bodyweight/{id}    registro de peso corporal
   date 'YYYY-MM-DD', kg
 ```
 
-- La **semana** de una sesión se calcula desde su `date` y el `startDate` del perfil (`sessionWeek` en `state.js`), no desde el campo `week` guardado. Así "Reiniciar programa" funciona bien.
-- El borrador del entrenamiento en curso vive en localStorage (`momentum-draft-{uid}-{A|B|C}`) y se sube a Firestore al tocar "Terminar".
+- **Las semanas van de lunes a domingo.** La semana 1 es la semana (lunes a domingo) que contiene `startDate`. Las funciones están en `program.js`: `mondayOf`, `weekOf`, `weekStart` y `totalWeeks`.
+- La **semana** de una sesión se calcula siempre desde su `date` y el `startDate` del perfil (`sessionWeek` en `state.js`), no desde el campo `week` guardado. Por eso, cambiar "Inicio del programa" en Perfil reordena todo solo.
+- `startDate` se edita en Perfil → Tus datos ("Inicio del programa") y también se pide en el onboarding.
+- El borrador del entrenamiento en curso vive en localStorage (`momentum-draft-{uid}-{A|B|C}-{w-N | s-id}`) y se sube a Firestore al tocar "Terminar" o "Guardar cambios".
+- Las sesiones registradas a posteriori (en otro día que no es hoy) se guardan con fecha `YYYY-MM-DDT12:00:00` y `durationMin: null`.
+
+## Navegación por semanas y edición
+
+- **Inicio** (`#/home/N`): flechas para ir a la semana anterior o siguiente. Un día completado abre su edición; un día pendiente de una semana pasada dice "Registrar"; los días de semanas futuras aparecen deshabilitados.
+- **Rutas de entrenamiento:**
+  - `#/workout/A` → nuevo entrenamiento de esta semana.
+  - `#/workout/A/w-3` → registrar el día A en la semana 3 (pasada). Por defecto propone el domingo de esa semana.
+  - `#/workout/A/s-<id>` → editar un entrenamiento guardado: cambiar sets o fecha, o eliminarlo.
+- Cada entrenamiento tiene un campo **Fecha**. Cambiar la fecha mueve el entrenamiento a la semana que le corresponde.
+- Las sugerencias de carga y la "vez anterior" usan solo las sesiones anteriores a la fecha del entrenamiento que se está viendo (`pool` en `workout.js`).
+- En Progreso → Historial, cada entrenamiento también se puede tocar para editarlo.
 - Los IDs de ejercicio (`exId`) son las llaves de `EXERCISES` en `program.js`. **No renombrar un id existente**: el historial de las personas quedaría huérfano. Para cambiar el nombre visible, editar solo `name`.
 
 ## Lógica de entrenamiento
@@ -163,4 +177,5 @@ Para verificaciones automáticas sin navegador visible se usa **Edge headless**
 ## Historial
 
 - 2026-09-23: creada como "FitBoda" y publicada en cavedevz.com/fitboda. Ese mismo día se renombró a **Momentum** (repo `tmontes30/momentum`), con diseño profesional sin emojis, íconos SVG y paleta índigo.
+- 2026-10-01: semanas de lunes a domingo, navegación entre semanas en Inicio, edición y registro de entrenamientos pasados (con campo de fecha) e "Inicio del programa" editable. Motivo: el usuario creó su perfil un miércoles y empezó a entrenar el lunes siguiente, así que su semana se cortó a la mitad.
 - Pendiente de confirmar con el usuario: restricción de la API key en Google Cloud y si el login de Google ya muestra "Momentum" en vez de la URL (si no, evaluar la opción del dominio propio).

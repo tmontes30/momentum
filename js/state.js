@@ -1,4 +1,4 @@
-import { weekNumber, weekOf, totalWeeks, phaseFor, DAY_KEYS } from "./program.js";
+import { weekNumber, weekOf, planOf, phaseFor, DAY_KEYS } from "./program.js";
 
 export const state = {
   user: null,
@@ -10,8 +10,8 @@ export const state = {
 export function program(today = new Date()) {
   const p = state.profile;
   const week = weekNumber(p.startDate, today);
-  const total = totalWeeks(p.startDate, p.targetDate);
-  return { week, total, phase: phaseFor(week, total) };
+  const plan = planOf(p);
+  return { week, total: plan.total, plan, phase: phaseFor(week, plan) };
 }
 
 // Semana del programa a la que pertenece una sesión, según su fecha (≤ 0 si es anterior al inicio del programa).

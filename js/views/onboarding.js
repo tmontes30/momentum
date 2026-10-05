@@ -1,6 +1,6 @@
 import { saveProfile, addBodyweight } from "../db.js";
 import { metrics, fmtKg } from "../calc.js";
-import { totalWeeks } from "../program.js";
+import { planOf, INTENSITY, PLAN_OPTIONS } from "../program.js";
 import { state, todayISO, addMonthsISO } from "../state.js";
 import { esc, go, toast } from "../ui.js";
 
@@ -37,8 +37,38 @@ export function goalFields(p = {}) {
       <input type="date" name="startDate" value="${esc(p.startDate || todayISO())}" required>
       <small class="muted">Las semanas van de lunes a domingo. La semana 1 es la que contiene esta fecha: pon el día en que empezaste (o empiezas) a entrenar.</small></label>
     <label class="field"><span>Fecha objetivo</span>
-      <input type="date" name="targetDate" value="${esc(p.targetDate || addMonthsISO(todayISO(), 7))}" required min="${todayISO()}">
-      <small class="muted">El plan se distribuye en las semanas que quedan hasta esta fecha.</small></label>`;
+      <input type="date" name="targetDate" value="${esc(p.targetDate || addMonthsISO(todayISO(), 7))}" required>
+      <small class="muted">La cuenta regresiva de Inicio apunta a esta fecha.</small></label>
+    <label class="field"><span>¿En cuánto tiempo quieres ver cambios?</span>
+      <select name="planWeeks" class="select">
+        <option value="" ${p.planWeeks ? "" : "selected"}>Hasta la fecha objetivo</option>
+        ${PLAN_OPTIONS.map((w) => `<option value="${w}" ${Number(p.planWeeks) === w ? "selected" : ""}>${w} semanas${w % 4 === 0 ? ` (${w / 4} ${w === 4 ? "mes" : "meses"})` : ""}</option>`).join("")}
+      </select>
+      <small class="muted">Todo el plan (adaptación, hipertrofia, fuerza y definición) se comprime en este plazo. Un plazo corto = un plan más exigente.</small></label>
+    <div class="field"><span>Intensidad</span>${seg("intensity", Object.entries(INTENSITY).map(([k, v]) => [k, v.label]), p.intensity || "moderada")}
+      <small class="muted" id="intensity-hint">${INTENSITY[p.intensity || "moderada"].hint}</small></div>`;
+}
+
+// Línea de tiempo del plan: qué semanas abarca cada fase. Marca la fase de `currentWeek`.
+export function planHTML(profile, currentWeek = 0) {
+  const plan = planOf(profile);
+  const deloads = [...plan.deloads];
+  return `
+    <ol class="plan-line">${plan.phases.map((ph) => `
+      <li class="${currentWeek >= ph.from && currentWeek <= ph.to ? "on" : ""} ${currentWeek > ph.to ? "past" : ""}">
+        <span class="plan-weeks">${ph.from === ph.to ? `Sem ${ph.from}` : `Sem ${ph.from}–${ph.to}`}</span>
+        <b>${ph.name}</b>
+      </li>`).join("")}
+    </ol>
+    <p class="small muted">${plan.total} semanas · intensidad ${INTENSITY[plan.intensity].label.toLowerCase()}${deloads.length ? ` · descarga en semana ${deloads.join(", ")}` : " · sin semanas de descarga"}.</p>`;
+}
+
+// Actualiza el texto de ayuda de intensidad al cambiar la opción.
+export function wireIntensityHint(root) {
+  root.querySelectorAll('input[name="intensity"]').forEach((r) => r.addEventListener("change", () => {
+    const hint = root.querySelector("#intensity-hint");
+    if (hint) hint.textContent = INTENSITY[r.value].hint;
+  }));
 }
 
 export function readProfileForm(form) {
@@ -47,6 +77,7 @@ export function readProfileForm(form) {
   for (const [k, v] of f.entries()) out[k] = typeof v === "string" ? v.trim() : v;
   if (out.heightCm) out.heightCm = Number(out.heightCm);
   if (out.weightKg) out.weightKg = Number(out.weightKg);
+  if ("planWeeks" in out) out.planWeeks = out.planWeeks ? Number(out.planWeeks) : null;
   return out;
 }
 
@@ -82,10 +113,11 @@ export function render(el) {
           <div class="row2"><button type="button" class="btn" id="back">Atrás</button>
           <button class="btn btn-primary">Ver mi plan</button></div></form>`;
     } else {
-      const weeks = totalWeeks(draft.startDate || todayISO(), draft.targetDate);
+      const planned = { ...draft, startDate: draft.startDate || todayISO() };
       body = `<p class="eyebrow">Paso 3 de 3</p><h1>Tu plan, ${esc(draft.name)}</h1>
-        <p class="muted">${weeks} semanas · 3 entrenamientos por semana · 5 fases progresivas</p>
+        <p class="muted">${planOf(planned).total} semanas · 3 entrenamientos por semana</p>
         ${metricsHTML(draft)}
+        <div class="card"><h3>Fases</h3>${planHTML(planned)}</div>
         <div class="card">
           <h3>Cómo funciona</h3>
           <ol class="steps-list">
@@ -98,6 +130,7 @@ export function render(el) {
           <button class="btn btn-primary" id="start">Comenzar</button></div>`;
     }
     el.innerHTML = `<div class="screen"><div class="stepper-dots">${steps}</div>${body}</div>`;
+    wireIntensityHint(el);
 
     el.querySelector("#back")?.addEventListener("click", () => {
       const form = el.querySelector("#f");

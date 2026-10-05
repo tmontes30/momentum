@@ -244,6 +244,16 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-
 .date-card small { font-size: 12px; }
 .date-card input { width: auto; min-height: 40px; padding: 8px 10px; font-size: 15px; }
 .danger { color: #d92d20; }
+
+.plan-line { list-style: none; margin: 12px 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.plan-line li {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 14px;
+}
+.plan-weeks { width: 76px; flex: none; font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.plan-line li.on { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.plan-line li.on b { color: var(--accent); }
+.plan-line li.past { opacity: 0.55; }
 .history-link { flex: 1; min-width: 0; }
 .day-card.done .day-icon { background: var(--good-soft); color: var(--good); }
 

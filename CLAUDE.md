@@ -85,6 +85,7 @@ users/{uid}                    perfil
   name, sex ('f'|'m'), birthDate 'YYYY-MM-DD', heightCm, weightKg,
   level ('principiante'|'intermedio'), goal ('tonificar'|'bajar grasa'|'ganar músculo'),
   eventName (opcional, ej. "el matrimonio"), targetDate 'YYYY-MM-DD', startDate 'YYYY-MM-DD',
+  planWeeks (número o null = hasta targetDate), intensity ('moderada'|'alta'|'maxima', por defecto moderada),
   photoURL, createdAt, updatedAt
 users/{uid}/sessions/{id}      un entrenamiento terminado
   date (ISO), dayKey 'A'|'B'|'C', week, phase, durationMin,
@@ -114,9 +115,13 @@ users/{uid}/bodyweight/{id}    registro de peso corporal
 ## Lógica de entrenamiento
 
 - **3 días:** A = Piernas y glúteos, B = Brazos y tren superior, C = Core + full body. Cada ejercicio tiene `alt` (alternativa si la máquina está ocupada).
-- **5 fases** sobre una referencia de 30 semanas, escaladas a las semanas reales entre `startDate` y `targetDate` (mínimo 8, máximo 52):
-  Adaptación (3×12-15) → Hipertrofia (4×10-12) → Fuerza y tono (4×8-10) → Definición (3×12-15, superseries + finisher) → Afinado final (2×10-12).
-  Semanas de descarga en las semanas proporcionales a la 8, 16 y 24. Después de la fecha objetivo queda en "Mantención".
+- **Plan** (`planOf` / `buildPlan` en `program.js`). Lo definen dos campos del perfil:
+  - `planWeeks` es el plazo para ver cambios (6-24 semanas). Si es `null`, el plan dura hasta `targetDate` y termina con "Afinado final". Si tiene valor, el plan es más corto que la fecha objetivo y no tiene afinado.
+  - `intensity` puede ser `moderada`, `alta` o `maxima` (ver `INTENSITY`). Define las semanas de adaptación (3, 2 o 1; con nivel intermedio, una menos), la frecuencia de las descargas (cada 6 semanas, cada 8 o nunca), las series extra (+1 en principales en alta; +1 en todo en máxima; máximo 5), el descanso (−15 s desde la fase 2) y el finisher diario (solo en máxima).
+- **Fases:** Adaptación (3×12-15) → Hipertrofia (4×10-12) → Fuerza y tono (4×8-10) → Definición (3×12-15, superseries + finisher) → Afinado final (2×10-12, solo si el plan dura hasta la fecha).
+  Las semanas que no son de adaptación ni de afinado se reparten en tres partes iguales entre hipertrofia, fuerza y definición.
+- Al terminar el plan, la fase es "Mantención". Para empezar otro bloque se define un nuevo plazo o se cambia "Inicio del programa".
+- Cambiar el plazo, la intensidad o el inicio **no borra datos**: solo cambia lo que el plan prescribe de ahí en adelante. Los entrenamientos guardados no se tocan.
 - **Carga inicial** = peso corporal × `coef` del ejercicio × factor por sexo (mujer: 0,7 piernas / 0,5 tren superior / 0,65 core) × nivel (intermedio ×1,3) × edad (≥50: ×0,85), redondeada al `inc` del equipo.
 - **Progresión doble:** si en la última sesión se completaron todas las series en el tope del rango, sugiere +`step` kg. Si falló el mínimo dos sesiones seguidas con el mismo peso, sugiere −10 %. Si no, mantiene la carga.
 - **Calorías:** TMB (Mifflin-St Jeor) × 1,45. Tonificar −10 %, bajar grasa −20 %, ganar músculo +10 %. Mínimo 1200 kcal (mujer) o 1500 kcal (hombre). Proteína 1,8-2,0 g/kg.
@@ -178,4 +183,6 @@ Para verificaciones automáticas sin navegador visible se usa **Edge headless**
 
 - 2026-09-23: creada como "FitBoda" y publicada en cavedevz.com/fitboda. Ese mismo día se renombró a **Momentum** (repo `tmontes30/momentum`), con diseño profesional sin emojis, íconos SVG y paleta índigo.
 - 2026-10-01: semanas de lunes a domingo, navegación entre semanas en Inicio, edición y registro de entrenamientos pasados (con campo de fecha) e "Inicio del programa" editable. Motivo: el usuario creó su perfil un miércoles y empezó a entrenar el lunes siguiente, así que su semana se cortó a la mitad.
+- 2026-10-05: el plazo para ver cambios y la intensidad se configuran por separado de la fecha objetivo. Motivo: con 7 meses hasta el matrimonio había demasiadas semanas de adaptación, y el usuario quiere ver cambios en 3 meses. Además, Perfil ahora muestra la línea de tiempo de las fases.
+- Ya existe un registro de uso (`usage`, `usage_daily` en Firestore, escrito desde `firebase.js`) para un panel del owner en cavedevz.com/admin/ (otro repo).
 - Pendiente de confirmar con el usuario: restricción de la API key en Google Cloud y si el login de Google ya muestra "Momentum" en vez de la URL (si no, evaluar la opción del dominio propio).

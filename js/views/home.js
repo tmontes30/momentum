@@ -1,4 +1,4 @@
-import { DAYS, DAY_KEYS, phaseFor, weekStart } from "../program.js";
+import { DAYS, DAY_KEYS, phaseFor, weekStart, mainSets, INTENSITY } from "../program.js";
 import { fmtKg } from "../calc.js";
 import { state, program, sessionsInWeek, nextDay, daysUntil, completeWeeks, isoDate as isoOf } from "../state.js";
 import { esc, icon, fmtDate } from "../ui.js";
@@ -37,10 +37,10 @@ export function weekCards(week, subtitleFor) {
 
 export function render(el, weekParam) {
   const p = state.profile;
-  const { week: current, total, phase: currentPhase } = program();
+  const { week: current, total, plan, phase: currentPhase } = program();
   const lastWeek = Math.max(total, current);
   const week = Math.min(lastWeek, Math.max(1, parseInt(weekParam, 10) || current));
-  const phase = phaseFor(week, total);
+  const phase = phaseFor(week, plan);
   const isCurrent = week === current;
 
   const days = daysUntil(p.targetDate);
@@ -96,7 +96,8 @@ export function render(el, weekParam) {
         <p class="eyebrow">${isCurrent ? "Fase actual" : `Fase de la semana ${week}`}</p>
         <h3>${phase.name}</h3>
         <p class="muted">${phase.goal}</p>
-        <p class="small">${phase.sets} series · ${phase.reps[0]}–${phase.reps[1]} reps · descanso ${phase.rest} s</p>
+        <p class="small">${mainSets(phase)} series en ejercicios principales · ${phase.reps[0]}–${phase.reps[1]} reps · descanso ${phase.rest} s</p>
+        <p class="small muted">${phase.to === Infinity ? `Desde la semana ${phase.from}` : `Semanas ${phase.from}–${phase.to}`} · Intensidad ${INTENSITY[plan.intensity].label.toLowerCase()}</p>
       </section>
 
       <section class="tiles">

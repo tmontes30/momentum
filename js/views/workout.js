@@ -22,7 +22,7 @@ export function render(el, dayKey, mode = "") {
   if (!dayKey || !DAYS[dayKey]) return renderPicker(el);
 
   const p = state.profile;
-  const { week: current, total } = program();
+  const { week: current, plan } = program();
   const editing = mode.startsWith("s-") ? state.sessions.find((s) => s.id === mode.slice(2)) : null;
   if (mode.startsWith("s-") && !editing) {
     toast("No se encontró ese entrenamiento.");
@@ -40,7 +40,7 @@ export function render(el, dayKey, mode = "") {
   const ac = new AbortController();
   const on = { signal: ac.signal };
   const day = DAYS[dayKey];
-  const phase = phaseFor(Math.max(1, weekOf(p.startDate, defaultDate)), total);
+  const phase = phaseFor(Math.max(1, weekOf(p.startDate, defaultDate)), plan);
 
   const refTime = editing ? new Date(editing.date) : targetWeek === current ? new Date(8.64e15) : endOfDay(weekEnd);
   pool = state.sessions.filter((s) => s.id !== editing?.id && new Date(s.date) < refTime);
@@ -53,7 +53,7 @@ export function render(el, dayKey, mode = "") {
   draft.date ||= defaultDate;
   const save = () => storage.set(draftKey, draft);
 
-  const finisher = day.finisher || (phase.superset ? "Circuito final: 4 rondas de 30 s intensos + 30 s suaves en bicicleta, remo o escaladora." : null);
+  const finisher = day.finisher || (phase.superset || phase.finisher ? "Circuito final: 4 rondas de 30 s intensos + 30 s suaves en bicicleta, remo o escaladora." : null);
   const minDate = isoDate(weekStart(p.startDate, 1));
   const backHref = targetWeek === current ? "#/home" : `#/home/${targetWeek}`;
   const title = editing ? "Editar entrenamiento" : targetWeek === current ? day.name : "Registrar entrenamiento";
@@ -214,7 +214,7 @@ export function render(el, dayKey, mode = "") {
       : `${draft.date}T12:00:00`;
     const week = weekOf(p.startDate, date);
     const data = {
-      date, dayKey, week, phase: phaseFor(Math.max(1, week), total).n, exercises,
+      date, dayKey, week, phase: phaseFor(Math.max(1, week), plan).n, exercises,
       durationMin: editing ? editing.durationMin ?? null
         : draft.date === todayISO() ? Math.max(1, Math.round((Date.now() - draft.startedAt) / 60000)) : null,
     };

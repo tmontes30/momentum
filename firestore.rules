@@ -5,5 +5,23 @@ service cloud.firestore {
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+
+    // Registro de uso: cada persona escribe solo lo suyo; solo el owner lo lee.
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email == 'tmontes30@gmail.com'
+        && request.auth.token.email_verified;
+    }
+    match /usage/{uid} {
+      allow read: if isOwner();
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.uid == uid;
+    }
+    match /usage_daily/{id} {
+      allow read: if isOwner();
+      allow create, update: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && id == request.resource.data.date + '_' + request.auth.uid;
+    }
   }
 }

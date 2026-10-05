@@ -121,22 +121,35 @@ export const DAYS = {
 
 export const DAY_KEYS = ["A", "B", "C"];
 
-// Periodización de referencia (30 semanas). Se escala a la fecha objetivo real.
+// Fases del plan. Su duración se calcula en buildPlan() según el plazo y la intensidad.
 export const PHASES = [
-  { n: 1, name: "Adaptación", to: 4, sets: 3, reps: [12, 15], time: [20, 30], rest: 60,
+  { n: 1, name: "Adaptación", sets: 3, reps: [12, 15], time: [20, 30], rest: 60,
     goal: "Aprender la técnica y acostumbrar el cuerpo. Deberías terminar cada serie sintiendo que podrías hacer 3 o 4 repeticiones más." },
-  { n: 2, name: "Hipertrofia", to: 12, sets: 4, reps: [10, 12], time: [30, 45], rest: 75,
+  { n: 2, name: "Hipertrofia", sets: 4, reps: [10, 12], time: [30, 45], rest: 75,
     goal: "Construir músculo. Las últimas 2 repeticiones de cada serie deben costar." },
-  { n: 3, name: "Fuerza y tono", to: 20, sets: 4, reps: [8, 10], time: [40, 60], rest: 90,
+  { n: 3, name: "Fuerza y tono", sets: 4, reps: [8, 10], time: [40, 60], rest: 90,
     goal: "Subir las cargas. Menos repeticiones, más peso y buena técnica." },
-  { n: 4, name: "Definición", to: 28, sets: 3, reps: [12, 15], time: [45, 60], rest: 45, superset: true,
+  { n: 4, name: "Definición", sets: 3, reps: [12, 15], time: [45, 60], rest: 45, superset: true,
     goal: "Quemar más. Ejercicios en superseries (A1 y A2 sin descanso entre ellos) y circuito final." },
-  { n: 5, name: "Afinado final", to: 30, sets: 2, reps: [10, 12], time: [30, 45], rest: 60,
+  { n: 5, name: "Afinado final", sets: 2, reps: [10, 12], time: [30, 45], rest: 60,
     goal: "Mantener lo ganado con menos volumen para llegar en tu mejor forma a la fecha objetivo." },
 ];
 
-const REF_WEEKS = 30;
-const REF_DELOADS = [8, 16, 24];
+// Intensidad del plan: cuánto dura la adaptación, cada cuánto hay descarga y cuánto volumen extra se agrega.
+//   adapt: semanas de adaptación (principiante; intermedio usa una menos)
+//   deloadEvery: semana de descarga cada N semanas (0 = sin descargas)
+//   extraMain / extraAll: series extra en ejercicios principales / en todos
+//   restDelta: segundos que se restan al descanso
+export const INTENSITY = {
+  moderada: { label: "Moderada", adapt: 3, deloadEvery: 6, extraMain: 0, extraAll: 0, restDelta: 0,
+    hint: "Progreso sostenido, con más tiempo para aprender la técnica." },
+  alta: { label: "Alta", adapt: 2, deloadEvery: 8, extraMain: 1, extraAll: 0, restDelta: -15,
+    hint: "Más series en los ejercicios principales y descansos más cortos." },
+  maxima: { label: "Máxima", adapt: 1, deloadEvery: 0, extraMain: 1, extraAll: 1, restDelta: -15, finisher: true,
+    hint: "Para ver cambios rápido: más volumen en todo, sin semanas de descarga y circuito final todos los días." },
+};
+
+export const PLAN_OPTIONS = [6, 8, 10, 12, 16, 20, 24];
 
 // Las semanas van de lunes a domingo. Semana 1 = la semana (lunes a domingo) que contiene startDate.
 export function toDate(value) {
@@ -173,23 +186,71 @@ export function totalWeeks(startDate, targetDate) {
   return Math.min(52, Math.max(8, weeks));
 }
 
-export function phaseFor(week, total) {
-  if (week > total) {
-    return { ...PHASES[2], name: "Mantención", goal: "Meta alcanzada. Sigue entrenando para mantener lo ganado.", deload: false };
+// Plan de un perfil. Si tiene planWeeks, el plan dura eso (puede ser más corto que la fecha objetivo);
+// si no, dura hasta targetDate y termina con "Afinado final".
+export function planOf(profile) {
+  const custom = Number(profile.planWeeks) > 0;
+  const total = custom ? Math.min(52, Math.max(4, Number(profile.planWeeks))) : totalWeeks(profile.startDate, profile.targetDate);
+  return buildPlan(total, profile.intensity, profile.level, !custom);
+}
+
+// Reparte las semanas: adaptación (según intensidad y nivel) → hipertrofia, fuerza y definición en partes iguales
+// → afinado final (solo si el plan termina en la fecha objetivo).
+export function buildPlan(total, intensityKey = "moderada", level = "principiante", taper = true) {
+  const intensity = INTENSITY[intensityKey] || INTENSITY.moderada;
+  let adapt = Math.max(1, intensity.adapt - (level === "intermedio" ? 1 : 0));
+  adapt = Math.min(adapt, Math.max(1, Math.round(total * 0.25)));
+  const taperWeeks = taper ? (total >= 16 ? 2 : 1) : 0;
+  const middle = Math.max(3, total - adapt - taperWeeks);
+  const hyp = Math.round(middle / 3);
+  const str = Math.round(middle / 3);
+  const lengths = [adapt, hyp, str, middle - hyp - str, taperWeeks];
+
+  let from = 1;
+  const phases = PHASES.map((p, i) => {
+    const seg = { ...p, from, to: from + lengths[i] - 1 };
+    from += lengths[i];
+    return seg;
+  }).filter((p) => p.to >= p.from);
+
+  const deloads = new Set();
+  if (intensity.deloadEvery) {
+    for (let w = intensity.deloadEvery; w < total - taperWeeks; w += intensity.deloadEvery) if (w > adapt) deloads.add(w);
   }
-  const refWeek = (week / total) * REF_WEEKS;
-  const phase = PHASES.find((p) => refWeek <= p.to) || PHASES[PHASES.length - 1];
-  const deloadWeeks = REF_DELOADS.map((w) => Math.round((w * total) / REF_WEEKS));
-  return { ...phase, deload: deloadWeeks.includes(week) };
+  return { total, intensity: intensityKey in INTENSITY ? intensityKey : "moderada", custom: !taper, phases, deloads };
+}
+
+export function phaseFor(week, plan) {
+  const intensity = INTENSITY[plan.intensity];
+  const base = week > plan.total
+    ? { ...PHASES[2], from: plan.total + 1, to: Infinity, name: "Mantención",
+        goal: plan.custom
+          ? "Completaste tu plazo. Define un nuevo plazo en Perfil para empezar otro bloque; tu historial se mantiene."
+          : "Meta alcanzada. Sigue entrenando para mantener lo ganado." }
+    : plan.phases.find((p) => week <= p.to) || plan.phases[plan.phases.length - 1];
+  return {
+    ...base,
+    deload: plan.deloads.has(week),
+    rest: base.n === 1 ? base.rest : Math.max(30, base.rest + intensity.restDelta),
+    extraMain: base.n === 1 ? 0 : intensity.extraMain,
+    extraAll: base.n === 1 ? 0 : intensity.extraAll,
+    finisher: Boolean(intensity.finisher && base.n > 1),
+  };
 }
 
 // Prescripción de un ejercicio en la fase dada.
 export function prescription(exId, phase) {
   const ex = EXERCISES[exId];
-  let sets = ex.main ? phase.sets : Math.min(phase.sets, 3);
+  let sets = (ex.main ? phase.sets + (phase.extraMain || 0) : Math.min(phase.sets, 3)) + (phase.extraAll || 0);
+  sets = Math.min(5, sets);
   if (phase.deload) sets = Math.max(2, Math.round(sets * 0.6));
   const range = ex.type === "time" ? phase.time : ex.reps || phase.reps;
   return { sets, min: range[0], max: range[1], rest: phase.rest };
+}
+
+// Series de los ejercicios principales en una fase (para mostrar en resúmenes).
+export function mainSets(phase) {
+  return Math.min(5, phase.sets + (phase.extraMain || 0) + (phase.extraAll || 0));
 }
 
 // Etiquetas de superserie (A1/A2, B1/B2…) para la fase de definición.

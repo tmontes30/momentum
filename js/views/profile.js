@@ -2,7 +2,7 @@ import { saveProfile, addBodyweight } from "../db.js";
 import { logout } from "../firebase.js";
 import { state, program, todayISO } from "../state.js";
 import { esc, toast, fmtDate } from "../ui.js";
-import { aboutFields, goalFields, readProfileForm, metricsHTML } from "./onboarding.js";
+import { aboutFields, goalFields, readProfileForm, metricsHTML, planHTML, wireIntensityHint } from "./onboarding.js";
 
 export function render(el) {
   const p = state.profile;
@@ -17,6 +17,13 @@ export function render(el) {
 
       <section class="card"><h3>Tus números</h3>${metricsHTML(p)}</section>
 
+      <section class="card">
+        <h3>Tu plan</h3>
+        <p class="muted">Empezaste el ${fmtDate(p.startDate, { day: "numeric", month: "long", year: "numeric" })}. Vas en la semana ${week} de ${total} (semanas de lunes a domingo).</p>
+        ${planHTML(p, week)}
+        <p class="small muted">Para cambiar el plazo o la intensidad, edita "¿En cuánto tiempo quieres ver cambios?" e "Intensidad" en Tus datos. Tus entrenamientos y pesos registrados no se borran: solo cambia lo que viene.</p>
+      </section>
+
       <form id="f" class="card form">
         <h3>Tus datos</h3>
         ${aboutFields(p)}
@@ -26,7 +33,6 @@ export function render(el) {
 
       <section class="card">
         <h3>Programa</h3>
-        <p class="muted">Empezaste el ${fmtDate(p.startDate, { day: "numeric", month: "long", year: "numeric" })}. Vas en la semana ${week} de ${total} (semanas de lunes a domingo).</p>
         <p class="small muted">Si la semana no calza con cuando realmente empezaste, corrige "Inicio del programa" en Tus datos. Tus entrenamientos se reordenan solos según su fecha.</p>
         <button class="btn btn-block" id="restart">Reiniciar el programa desde hoy</button>
         <p class="small muted">Tu historial se mantiene; solo vuelve a la semana 1.</p>
@@ -35,6 +41,7 @@ export function render(el) {
       <button class="btn btn-block btn-ghost" id="logout">Cerrar sesión</button>
       <p class="small muted center">Comparte la página con tus amigos: cada uno entra con su Google y tiene su propio perfil.</p>
     </div>`;
+  wireIntensityHint(el);
 
   el.querySelector("#f").addEventListener("submit", async (e) => {
     e.preventDefault();

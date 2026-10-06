@@ -41,6 +41,7 @@ antes del matrimonio; también la usan amigos. Cada persona entra con Google y t
 | `js/state.js` | Estado en memoria (usuario, perfil, sesiones, peso) y helpers de semana, fase y cuenta regresiva |
 | `js/program.js` | **Rutinas**: biblioteca de ejercicios, días A/B/C, 5 fases y periodización. Aquí se editan los ejercicios |
 | `js/calc.js` | IMC, metabolismo basal (Mifflin-St Jeor), calorías, macros, carga inicial y progresión doble |
+| `js/stats.js` | Estadísticas de Progreso: racha, cumplimiento, volumen, avance por ejercicio y logros |
 | `js/ui.js` | `icon()`, `logo()`, `esc()`, `toast()`, `storage` (localStorage con try/catch) y alerta de fin de descanso |
 | `js/views/*.js` | Pantallas: `login`, `onboarding` (también exporta los campos del perfil), `home` (exporta `dayCard`), `workout`, `progress`, `profile` |
 | `firestore.rules` | Reglas de seguridad (copia de lo publicado en la consola) |
@@ -185,4 +186,6 @@ Para verificaciones automáticas sin navegador visible se usa **Edge headless**
 - 2026-10-01: semanas de lunes a domingo, navegación entre semanas en Inicio, edición y registro de entrenamientos pasados (con campo de fecha) e "Inicio del programa" editable. Motivo: el usuario creó su perfil un miércoles y empezó a entrenar el lunes siguiente, así que su semana se cortó a la mitad.
 - 2026-10-05: el plazo para ver cambios y la intensidad se configuran por separado de la fecha objetivo. Motivo: con 7 meses hasta el matrimonio había demasiadas semanas de adaptación, y el usuario quiere ver cambios en 3 meses. Además, Perfil ahora muestra la línea de tiempo de las fases.
 - Ya existe un registro de uso (`usage`, `usage_daily` en Firestore, escrito desde `firebase.js`) para un panel del owner en cavedevz.com/admin/ (otro repo).
+- Login en Safari (iPhone): hubo un episodio en que el login "llevaba a otra página" y se arregló solo. Si vuelve a pasar, la causa probable es que el `authDomain` (firebaseapp.com) es distinto del dominio de la app y Safari bloquea el almacenamiento entre sitios. El usuario prefiere solucionarlo dentro de Firebase: mover el hosting a Firebase Hosting y usar ese mismo dominio como `authDomain`. No quiere que se toque el repo de cavedevz.com.
+- 2026-10-05: pantalla Progreso ampliada para motivar y monitorear. Tiene indicadores (entrenamientos, racha, % de cumplimiento, kg totales), avance del plan, mapa de constancia por semana, volumen semanal, récords con % de mejora y mini-gráficas, y logros. Los cálculos están en `js/stats.js`.
 - Pendiente de confirmar con el usuario: restricción de la API key en Google Cloud y si el login de Google ya muestra "Momentum" en vez de la URL (si no, evaluar la opción del dominio propio).

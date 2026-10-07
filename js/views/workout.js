@@ -386,7 +386,7 @@ function renderPicker(el) {
   el.innerHTML = `
     <div class="screen">
       <h1>Elige tu entrenamiento</h1>
-      <p class="muted">Haz los 3 días en la semana (lunes a domingo), en el orden que te acomode. Deja al menos un día de descanso entre Piernas y Core.</p>
+      <p class="muted">Haz los 3 días en la semana (lunes a domingo), en el orden que te acomode. Deja al menos un día de descanso entre Piernas y Abdominales + full body (ambos trabajan piernas).</p>
       <div class="day-list">${weekCards(week, (k) => DAYS[k].exercises.map((id) => EXERCISES[id].name).slice(0, 3).join(", ") + "…")}</div>
       <p class="small muted center">Para registrar o corregir semanas anteriores, usa las flechas de semana en Inicio.</p>
     </div>`;

@@ -121,7 +121,7 @@ export function render(el) {
         <div class="card">
           <h3>Cómo funciona</h3>
           <ol class="steps-list">
-            <li>Entrena los días <b>Piernas</b>, <b>Brazos</b> y <b>Core</b> en cualquier orden durante la semana.</li>
+            <li>Entrena los días <b>Piernas</b>, <b>Brazos</b> y <b>Abdominales + full body</b> en cualquier orden durante la semana.</li>
             <li>Te sugerimos una carga inicial para cada ejercicio: ajústala para que las últimas repeticiones cuesten.</li>
             <li>Anota tus kilos y repeticiones. Cuando completes todas las series al tope, la app te dirá que subas el peso.</li>
           </ol>

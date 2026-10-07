@@ -115,7 +115,8 @@ users/{uid}/bodyweight/{id}    registro de peso corporal
 
 ## Lógica de entrenamiento
 
-- **3 días:** A = Piernas y glúteos, B = Brazos y tren superior, C = Core + full body. Cada ejercicio tiene `alt` (alternativa si la máquina está ocupada).
+- **3 días:** A = Piernas y glúteos, B = Brazos y tren superior, C = Abdominales + full body. Cada ejercicio tiene `alt` (alternativa si la máquina está ocupada).
+- **Día C desde el 2026-10-06:** 3 básicos full body (peso muerto rumano, zancadas, remo con mancuerna) y un bloque de abdominales (crunch en polea, elevación de piernas, giro ruso, pallof press, rueda abdominal y plancha). Las flexiones salieron del día. Las sesiones antiguas conservan sus ejercicios: al editarlas, los que ya no están en el día aparecen al final.
 - **Plan** (`planOf` / `buildPlan` en `program.js`). Lo definen dos campos del perfil:
   - `planWeeks` es el plazo para ver cambios (6-24 semanas). Si es `null`, el plan dura hasta `targetDate` y termina con "Afinado final". Si tiene valor, el plan es más corto que la fecha objetivo y no tiene afinado.
   - `intensity` puede ser `moderada`, `alta` o `maxima` (ver `INTENSITY`). Define las semanas de adaptación (3, 2 o 1; con nivel intermedio, una menos), la frecuencia de las descargas (cada 6 semanas, cada 8 o nunca), las series extra (+1 en principales en alta; +1 en todo en máxima; máximo 5), el descanso (−15 s desde la fase 2) y el finisher diario (solo en máxima).

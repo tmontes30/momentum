@@ -71,7 +71,7 @@ export const EXERCISES = {
   hammer_curl: { name: "Curl martillo", muscle: "Bíceps y antebrazo", equip: "Mancuernas", region: "upper", type: "weight", coef: 0.1, inc: 1, step: 1, perSide: true, alt: "cable_curl",
     tip: "Palmas mirándose entre sí todo el recorrido." },
 
-  // ── Core + full body ─────────────────────────────────
+  // ── Abdominales + full body ──────────────────────────
   rdl: { name: "Peso muerto rumano con barra", muscle: "Isquiotibiales, glúteos y espalda baja", equip: "Barra", region: "lower", type: "weight", coef: 0.6, inc: 5, step: 5, main: true, alt: "db_rdl",
     tip: "Barra pegada a las piernas, cadera atrás y espalda neutra. Sube apretando glúteos." },
   lunges: { name: "Zancadas con mancuernas", muscle: "Piernas y glúteos", equip: "Mancuernas", region: "lower", type: "weight", coef: 0.1, inc: 2, step: 2, perSide: true, main: true, alt: "step_up",
@@ -98,6 +98,14 @@ export const EXERCISES = {
     tip: "De lado a la polea, empuja el agarre al frente sin dejar que el torso gire. Reps por lado." },
   side_plank: { name: "Plancha lateral", muscle: "Oblicuos", equip: "Colchoneta", region: "core", type: "time", alt: "pallof",
     tip: "Codo bajo el hombro, cuerpo en línea recta. Segundos por lado." },
+  russian_twist: { name: "Giro ruso con disco", muscle: "Oblicuos", equip: "Disco o mancuerna", region: "core", type: "weight", coef: 0.08, inc: 2.5, step: 2.5, reps: [16, 24], alt: "woodchop",
+    tip: "Sentado con el torso inclinado atrás y pies apoyados (o en el aire para más dificultad). Gira desde el tronco, no solo los brazos. Reps totales (ambos lados)." },
+  woodchop: { name: "Leñador en polea", muscle: "Oblicuos", equip: "Polea", region: "core", type: "weight", coef: 0.12, inc: 2.5, step: 2.5, reps: [10, 12], alt: "russian_twist",
+    tip: "Polea alta, tira en diagonal hacia la cadera contraria girando el torso con los brazos casi estirados. Reps por lado." },
+  ab_wheel: { name: "Rueda abdominal", muscle: "Abdominales (antiextensión)", equip: "Rueda abdominal", region: "core", type: "bodyweight", reps: [6, 12], alt: "stir_pot",
+    tip: "De rodillas, avanza la rueda con la espalda neutra y el abdomen apretado; vuelve antes de que se hunda la zona lumbar." },
+  stir_pot: { name: "Plancha con revolver en balón", muscle: "Abdominales (antiextensión)", equip: "Balón suizo", region: "core", type: "bodyweight", reps: [8, 12], alt: "ab_wheel",
+    tip: "Antebrazos sobre el balón en posición de plancha; dibuja círculos pequeños sin mover la cadera. Reps por lado." },
 };
 
 export const DAYS = {
@@ -112,9 +120,11 @@ export const DAYS = {
     exercises: ["lat_pulldown", "db_press", "cable_row", "shoulder_press", "lateral_raise", "biceps_curl", "triceps_pushdown", "hammer_curl"],
   },
   C: {
-    name: "Core + full body", short: "Core",
-    warmup: "5 min de caminadora inclinada + 10 bisagras de cadera + 20 s de plancha.",
-    exercises: ["rdl", "lunges", "db_row", "pushup", "plank", "cable_crunch", "leg_raise", "pallof"],
+    name: "Abdominales + full body", short: "Abs",
+    warmup: "5 min de caminadora inclinada + 10 bisagras de cadera + 10 dead bugs + 20 s de plancha para activar el abdomen.",
+    // Bloque full body corto (3 básicos) y luego bloque de abdominales completo:
+    // recto superior, abdomen bajo, oblicuos, antirrotación, antiextensión e isométrico.
+    exercises: ["rdl", "lunges", "db_row", "cable_crunch", "leg_raise", "russian_twist", "pallof", "ab_wheel", "plank"],
     finisher: "Circuito final: 4 rondas de 30 s intensos + 30 s suaves en bicicleta, remo o escaladora.",
   },
 };

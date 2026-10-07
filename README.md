@@ -7,7 +7,7 @@ y registro de cargas para seguir el progreso semana a semana. HTML/CSS/JS puro, 
 
 Publicada en **https://cavedevz.com/momentum/**
 
-- **Día A: Piernas y glúteos** · **Día B: Brazos y tren superior** · **Día C: Core + full body**
+- **Día A: Piernas y glúteos** · **Día B: Brazos y tren superior** · **Día C: Abdominales + full body**
 - Plan de 5 fases distribuido hasta la fecha objetivo de cada persona (adaptación → hipertrofia → fuerza/tono → definición → afinado), con semanas de descarga.
 - Calcula IMC, gasto calórico (Mifflin-St Jeor), proteína y la carga inicial de cada ejercicio según sexo, peso, edad y experiencia.
 - Progresión automática: si completas todas las series en el tope del rango de repeticiones, sugiere subir la carga.

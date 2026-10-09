@@ -104,6 +104,54 @@ export function achievements() {
     { icon: "target", name: "Disciplina", desc: "25 entrenamientos", value: n, goal: 25 },
     { icon: "calendar", name: "Mitad del plan", desc: "Llega a la mitad de tu plan", value: Math.min(week, total), goal: Math.ceil(total / 2) },
   ];
-  if (bw.length >= 2 && state.profile.goal !== "ganar músculo") list.push({ icon: "down", name: "Primeros 2 kg", desc: "Baja 2 kg desde tu primer registro de peso", value: Math.round(lost * 10) / 10, goal: 2 });
+  if (bw.length >= 2 && state.profile.goal !== "ganar músculo") list.push({ icon: "down", name: "Primeros 2 kg", desc: "Baja 2 kg desde tu primer registro de peso", value: Math.round(lost * 10) / 10, goal: 2, unit: " kg" });
+
+  // Segunda tanda: metas de mediano y largo plazo.
+  const progress = exerciseProgress();
+  const best = (id) => progress.find((p) => p.id === id)?.best || 0;
+  const adh = week >= 5 ? adherence() ?? 0 : 0;
+  const bodyKg = Math.round(state.profile.weightKg || 0);
+  list.push(
+    { icon: "timer", name: "Madrugador", desc: "10 entrenamientos antes de las 8:00", value: earlySessions(), goal: 10 },
+    { icon: "target", name: "Cumplidor", desc: "90% de los días planificados (desde la semana 5)", value: adh, goal: 90, unit: "%" },
+    { icon: "trophy", name: "Día de récords", desc: "3 récords en un mismo entrenamiento", value: maxRecordsInOneSession(), goal: 3 },
+    { icon: "timer", name: "Plancha de 1 minuto", desc: "Aguanta 60 s en plancha", value: best("plank"), goal: 60, unit: " s" },
+    { icon: "up", name: "Tu propio peso", desc: `Mueve tu peso corporal (${bodyKg} kg) en la prensa`, value: best("leg_press"), goal: bodyKg || 1, unit: " kg" },
+    { icon: "up", name: "+50%", desc: "Mejora un 50% tu marca inicial en cualquier ejercicio", value: Math.max(0, ...progress.map((p) => p.gain)), goal: 50, unit: "%" },
+    { icon: "calendar", name: "Control de peso", desc: "Registra tu peso corporal 8 veces", value: bw.length, goal: 8 },
+    { icon: "zap", name: "Racha de 8", desc: "8 semanas completas seguidas", value: bestStreak(), goal: 8 },
+    { icon: "done", name: "Imparable", desc: "50 entrenamientos", value: n, goal: 50 },
+    { icon: "chart", name: "100 toneladas", desc: "100.000 kg levantados en total", value: Math.round(vol), goal: 100000 },
+    { icon: "flag", name: "Plan completo", desc: "Llega a la última semana de tu plan", value: Math.min(week, total), goal: total },
+  );
   return list.map((a) => ({ ...a, unlocked: a.value >= a.goal }));
+}
+
+// Entrenamientos registrados en el momento (con duración) que empezaron antes de las 8:00.
+function earlySessions() {
+  return state.sessions.filter((s) => {
+    if (!s.durationMin) return false;
+    const start = new Date(new Date(s.date).getTime() - s.durationMin * 60000);
+    return start.getHours() < 8;
+  }).length;
+}
+
+// Mayor cantidad de ejercicios que superaron su mejor peso anterior en un mismo entrenamiento.
+function maxRecordsInOneSession() {
+  const bestSoFar = new Map();
+  let max = 0;
+  for (const s of state.sessions) {
+    let n = 0;
+    for (const e of s.exercises || []) {
+      if (EXERCISES[e.exId]?.type !== "weight") continue;
+      const done = (e.sets || []).filter((x) => x.done);
+      if (!done.length) continue;
+      const w = workingWeight(done);
+      const prev = bestSoFar.get(e.exId);
+      if (prev !== undefined && w > prev) n++;
+      if (prev === undefined || w > prev) bestSoFar.set(e.exId, w);
+    }
+    max = Math.max(max, n);
+  }
+  return max;
 }

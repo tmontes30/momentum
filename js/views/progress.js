@@ -20,6 +20,8 @@ function loadChart() {
 
 const SEL_KEY = "momentum-progress-ex";
 const RECORDS_SHOWN = 6;
+const BADGES_PER_PAGE = 10;
+let badgePage = 0;
 
 export async function render(el) {
   let charts = [];
@@ -113,7 +115,7 @@ export async function render(el) {
 
         <section class="card">
           <div class="section-head"><h3>Logros</h3><span class="muted small">${unlocked} de ${achieved.length}</span></div>
-          <div class="badges">${achieved.map(badgeHTML).join("")}</div>
+          <div id="badges">${badgesPage(achieved)}</div>
         </section>
 
         <section class="card">
@@ -143,6 +145,13 @@ export async function render(el) {
     el.querySelector("#ex")?.addEventListener("change", (e) => { storage.set(SEL_KEY, e.target.value); paint(); });
 
     // Tocar un récord abre su detalle.
+    el.querySelector("#badges").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-page]");
+      if (!b || b.disabled) return;
+      badgePage += Number(b.dataset.page);
+      el.querySelector("#badges").innerHTML = badgesPage(achieved);
+    });
+
     const openDetail = async (id) => {
       storage.set(SEL_KEY, id);
       await paint();
@@ -240,6 +249,21 @@ function sparkline(series) {
   return `<svg class="spark" width="${w}" height="${h}" aria-hidden="true"><polyline points="${pts}"/><circle cx="${x(series.length - 1).toFixed(1)}" cy="${y(series[series.length - 1]).toFixed(1)}" r="2.5"/></svg>`;
 }
 
+const num = (n) => (Math.round(n * 10) / 10).toLocaleString("es");
+
+// Logros de a BADGES_PER_PAGE, con flechas para pasar de página.
+function badgesPage(list) {
+  const pages = Math.max(1, Math.ceil(list.length / BADGES_PER_PAGE));
+  badgePage = Math.min(Math.max(0, badgePage), pages - 1);
+  const items = list.slice(badgePage * BADGES_PER_PAGE, (badgePage + 1) * BADGES_PER_PAGE);
+  return `<div class="badges">${items.map(badgeHTML).join("")}</div>
+    ${pages > 1 ? `<div class="pager">
+      <button class="icon-btn" data-page="-1" ${badgePage === 0 ? "disabled" : ""} aria-label="Logros anteriores">${icon("back")}</button>
+      <span class="small muted">${badgePage + 1} de ${pages}</span>
+      <button class="icon-btn" data-page="1" ${badgePage === pages - 1 ? "disabled" : ""} aria-label="Más logros">${icon("next")}</button>
+    </div>` : ""}`;
+}
+
 function badgeHTML(a) {
   const pct = Math.min(100, Math.round((a.value / a.goal) * 100));
   return `<div class="badge ${a.unlocked ? "unlocked" : ""}">
@@ -247,7 +271,7 @@ function badgeHTML(a) {
     <b>${a.name}</b>
     <small>${a.desc}</small>
     ${a.unlocked ? `<small class="badge-ok">Desbloqueado</small>`
-      : `<div class="bar sm"><i style="width:${pct}%"></i></div><small class="muted">${fmtKg(Math.min(a.value, a.goal))} / ${a.goal.toLocaleString("es")}</small>`}
+      : `<div class="bar sm"><i style="width:${pct}%"></i></div><small class="muted">${num(Math.min(a.value, a.goal))}${a.unit || ""} / ${num(a.goal)}${a.unit || ""}</small>`}
   </div>`;
 }
 

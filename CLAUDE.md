@@ -43,7 +43,8 @@ antes del matrimonio; también la usan amigos. Cada persona entra con Google y t
 | `js/calc.js` | IMC, metabolismo basal (Mifflin-St Jeor), calorías, macros, carga inicial y progresión doble |
 | `js/stats.js` | Estadísticas de Progreso: racha, cumplimiento, volumen, avance por ejercicio y logros |
 | `js/ui.js` | `icon()`, `logo()`, `esc()`, `toast()`, `storage` (localStorage con try/catch) y alerta de fin de descanso |
-| `js/views/*.js` | Pantallas: `login`, `onboarding` (también exporta los campos del perfil), `home` (exporta `dayCard`), `workout`, `progress`, `profile` |
+| `js/views/*.js` | Pantallas: `login`, `onboarding` (también exporta los campos del perfil), `home` (exporta `dayCard` y `weekCards`), `workout`, `train`, `progress`, `profile` |
+| `js/views/train.js` | Pestaña "Entrenar" (`#/workout` sin día): tarjeta "Hoy toca", o "En curso" si hay un borrador con series anotadas, con la lista de ejercicios y el botón para empezar o continuar; temporizador (cuenta atrás o cronómetro); calculadora de discos por lado; biblioteca de ejercicios con búsqueda, filtro por día y tu mejor marca |
 | `firestore.rules` | Reglas de seguridad (copia de lo publicado en la consola) |
 | `icons/` | Íconos PWA (192, 512 y maskable). Se generan con System.Drawing en PowerShell |
 | `serve.ps1` | Servidor local para pruebas (http://localhost:8080) |

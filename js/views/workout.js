@@ -3,7 +3,7 @@ import { exerciseHistory, suggestion, summarizeSets, workingWeight, fmtKg } from
 import { addSession, updateSession, deleteSession } from "../db.js";
 import { state, program, sessionsInWeek, sessionWeek, sortSessions, isoDate, todayISO } from "../state.js";
 import { esc, go, toast, fmtDate, storage, alertDone, icon } from "../ui.js";
-import { weekCards } from "./home.js";
+import { render as renderTrain } from "./train.js";
 
 const DRAFT_MAX_AGE = 12 * 3600 * 1000;
 const TREND_ICON = { up: "up", keep: "flat", down: "down", start: "info" };
@@ -29,7 +29,8 @@ function slotRx(i, exId) {
 export function render(el, dayKey, mode = "") {
   teardown?.();
   teardown = null;
-  if (!dayKey || !DAYS[dayKey]) return renderPicker(el);
+  // Sin día: pestaña "Entrenar" (entrenamiento de hoy, herramientas y biblioteca).
+  if (!dayKey || !DAYS[dayKey]) return renderTrain(el);
 
   const p = state.profile;
   const { week: current, plan } = program();
@@ -408,15 +409,4 @@ function renderSummary(el, session, prs) {
       <button class="btn btn-primary btn-lg btn-block" id="home">Volver al inicio</button>
     </div>`;
   el.querySelector("#home").addEventListener("click", () => go(isCurrent ? "#/home" : `#/home/${week}`));
-}
-
-function renderPicker(el) {
-  const { week } = program();
-  el.innerHTML = `
-    <div class="screen">
-      <h1>Elige tu entrenamiento</h1>
-      <p class="muted">Haz los 3 días en la semana (lunes a domingo), en el orden que te acomode. Deja al menos un día de descanso entre Piernas y Abdominales + full body (ambos trabajan piernas).</p>
-      <div class="day-list">${weekCards(week, (k) => DAYS[k].exercises.map((id) => EXERCISES[id].name).slice(0, 3).join(", ") + "…")}</div>
-      <p class="small muted center">Para registrar o corregir semanas anteriores, usa las flechas de semana en Inicio.</p>
-    </div>`;
 }

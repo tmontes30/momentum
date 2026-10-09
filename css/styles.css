@@ -245,6 +245,51 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-
 .date-card input { width: auto; min-height: 40px; padding: 8px 10px; font-size: 15px; }
 .danger { color: #d92d20; }
 
+/* ── Entrenar ── */
+.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
+.today.done { border-color: var(--good); box-shadow: 0 0 0 1px var(--good), var(--shadow); }
+.today.done .eyebrow { color: var(--good); }
+.today h2 { font-size: 22px; margin-bottom: 2px; }
+.today-list { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; }
+.today-list li { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.today-list li:last-child { border-bottom: 0; }
+.today-list .ss { margin-top: 0; font-size: 11px; padding: 2px 5px; }
+.today-list small { font-variant-numeric: tabular-nums; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.chip {
+  appearance: none; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  padding: 7px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--text);
+}
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.seg-sm span { padding: 6px 8px; font-size: 12px; }
+.timer-face {
+  font-size: 56px; font-weight: 800; letter-spacing: -0.03em; text-align: center;
+  font-variant-numeric: tabular-nums; margin: 6px 0 2px;
+}
+
+.plates .chips { margin: 6px 0; }
+.plate {
+  display: inline-grid; place-items: center; min-width: 44px; height: 44px; padding: 0 6px;
+  border-radius: 50%; font-size: 13px; font-weight: 800; color: #fff; background: #475467;
+}
+.plate.p25 { background: #b42318; }
+.plate.p20 { background: #1d4ed8; }
+.plate.p15 { background: #b54708; }
+.plate.p10 { background: #067647; }
+.plate.p5, .plate.p2_5, .plate.p1_25 { min-width: 36px; height: 36px; font-size: 12px; }
+
+#lib-q { margin-top: 10px; }
+.lib-item { border-bottom: 1px solid var(--line); }
+.lib-item:last-child { border-bottom: 0; }
+.lib-item summary { display: flex; align-items: center; gap: 6px; padding: 10px 0; cursor: pointer; list-style: none; }
+.lib-item summary::-webkit-details-marker { display: none; }
+.lib-item summary .grow { display: flex; flex-direction: column; }
+.lib-item summary small { font-size: 12px; }
+.tag { font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 2px 6px; }
+.lib-body { padding: 0 0 12px; }
+.lib-body p { margin: 0 0 6px; }
+
 /* ── Progreso ── */
 .kpis .tile { position: relative; padding-top: 14px; }
 .kpis .tile b { font-size: 19px; }

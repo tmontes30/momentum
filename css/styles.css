@@ -534,6 +534,14 @@ th { font-size: 12px; color: var(--muted); font-weight: 600; }
 .nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .nav a.active { color: var(--accent); }
 
+.code-tag {
+  display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap;
+  font-variant-numeric: tabular-nums; color: var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 3px 8px;
+}
+.notice .code-tag { margin-top: 6px; }
+.right { text-align: right; flex: none; }
+a.chip { text-decoration: none; }
+
 .update-bar {
   position: fixed; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top)); z-index: 60;
   max-width: 536px; margin: 0 auto;

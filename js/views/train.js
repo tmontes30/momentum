@@ -1,5 +1,5 @@
 // Pestaña "Entrenar": entrenamiento de hoy, herramientas para el gimnasio y biblioteca de ejercicios.
-import { EXERCISES, DAYS, DAY_KEYS, prescription, sessionPlan, phaseFor } from "../program.js";
+import { EXERCISES, DAYS, DAY_KEYS, prescription, sessionPlan, phaseFor, weekStart, routineCode, STRETCH_MIN } from "../program.js";
 import { fmtKg } from "../calc.js";
 import { exerciseProgress } from "../stats.js";
 import { state, program, sessionsInWeek, nextDay } from "../state.js";
@@ -48,6 +48,7 @@ export function render(el) {
         <div class="section-head"><h3>Esta semana</h3><span class="muted small">${doneKeys.size} de 3</span></div>
         <div class="day-list">${weekCards(week, (k) => `Día ${k} · ~${sessionPlan(k, phase, minutes).total} min`)}</div>
         <p class="small muted">Hazlos en el orden que te acomode, dejando un día de descanso entre Piernas y Abdominales + full body (ambos trabajan piernas). Para semanas anteriores, usa las flechas en Inicio.</p>
+        <a class="btn btn-block" href="#/workout/A/p-${week + 1}">Ver la rutina de las próximas semanas</a>
       </section>
 
       <section class="card">
@@ -187,6 +188,53 @@ export function render(el) {
   paintLib();
 
   return () => clearInterval(int);
+}
+
+// Vista previa (solo lectura) de un día en cualquier semana del plan: para revisar lo que viene y comparar entre cuentas.
+export function renderPreview(el, k, weekParam) {
+  const p = state.profile;
+  const { week: current, total, plan } = program();
+  const last = Math.max(total, current);
+  const week = Math.min(last, Math.max(1, weekParam || current));
+  const phase = phaseFor(week, plan);
+  const day = DAYS[k];
+  const sp = sessionPlan(k, phase, Number(p.sessionMinutes) || 60);
+  const start = weekStart(p.startDate, week);
+  const opens = start.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" });
+  const nav = (w) => (w >= 1 && w <= last ? `#/workout/${k}/p-${w}` : null);
+
+  el.innerHTML = `
+    <div class="screen">
+      <header class="top">
+        <a class="icon-btn" href="#/home/${week}" aria-label="Volver">${icon("back")}</a>
+        <div class="grow"><p class="eyebrow">Vista previa · semana ${week}</p><h1 class="h-sm">${day.name}</h1></div>
+      </header>
+
+      <div class="chips">${DAY_KEYS.map((d) => `<a class="chip ${d === k ? "on" : ""}" href="#/workout/${d}/p-${week}">Día ${d}</a>`).join("")}</div>
+
+      <section class="card">
+        <div class="section-head"><h3>${phase.name}${phase.deload ? " · Descarga" : ""}</h3><span class="code-tag">Código ${routineCode(sp, phase)}</span></div>
+        <p class="muted small">~${sp.minutes} min + ${STRETCH_MIN} min de elongación${sp.trims.length ? ` · ajustado a ${sp.budget} min: ${sp.trims.join(", ")}` : ""}.</p>
+        ${week > current ? `<p class="small">Se podrá registrar desde el ${opens}.</p>` : ""}
+        <ol class="today-list">${sp.slots.map((s) => {
+          const ex = EXERCISES[s.exId];
+          const rx = prescription(s.exId, phase);
+          const unit = ex.type === "time" ? " s" : " reps";
+          return `<li>${s.label ? `<span class="ss">${s.label}</span>` : ""}
+            <span class="grow"><b>${ex.name}</b><br><small class="muted">${ex.muscle} · ${ex.equip}</small></span>
+            <small class="muted right">${Math.min(rx.sets, s.sets)} × ${rx.min}–${rx.max}${unit}<br>${s.pairFirst ? "sin descanso" : `desc. ${s.rest} s`}</small></li>`;
+        }).join("")}</ol>
+        ${sp.finisher ? `<p class="small muted">+ ${day.finisher || "Circuito final: 4 rondas de 30 s intensos + 30 s suaves."}</p>` : ""}
+        ${day.stretch ? `<p class="small muted"><b>Elongación:</b> ${day.stretch.join(" · ")}</p>` : ""}
+      </section>
+
+      <div class="pager">
+        ${nav(week - 1) ? `<a class="icon-btn" href="${nav(week - 1)}" aria-label="Semana anterior">${icon("back")}</a>` : `<span class="icon-btn" style="visibility:hidden"></span>`}
+        <span class="small muted">Semana ${week} de ${total}</span>
+        ${nav(week + 1) ? `<a class="icon-btn" href="${nav(week + 1)}" aria-label="Semana siguiente">${icon("next")}</a>` : `<span class="icon-btn" style="visibility:hidden"></span>`}
+      </div>
+      <p class="small muted center">Si dos cuentas ven el mismo código en el mismo día y semana, tienen exactamente la misma rutina.</p>
+    </div>`;
 }
 
 // Tarjeta del entrenamiento de hoy con la lista de ejercicios (para saber qué máquinas se usarán).

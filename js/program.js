@@ -360,6 +360,18 @@ export function sessionPlan(dayKey, phase, sessionMinutes = 60) {
   return { ...plan, trims, minutes, total: minutes + STRETCH_MIN, budget: sessionMinutes };
 }
 
+// Firma de una sesión (ejercicios, series, descansos, pares y fase). Dos cuentas con la misma firma tienen la misma rutina.
+export function routineKey(sp, phase) {
+  return sp.slots.map((s) => `${s.exId}:${s.sets}:${s.rest}:${s.label || ""}`).join(",") + `|${phase.n}|${phase.deload ? 1 : 0}|${sp.finisher ? 1 : 0}`;
+}
+
+// Código corto (4 caracteres) de la firma, para comparar a simple vista entre celulares.
+export function routineCode(sp, phase) {
+  let h = 2166136261;
+  for (const ch of routineKey(sp, phase)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return ((h >>> 0) % 65536).toString(16).toUpperCase().padStart(4, "0");
+}
+
 // Series de los ejercicios principales en una fase (para mostrar en resúmenes).
 export function mainSets(phase) {
   return Math.min(5, phase.sets + (phase.extraMain || 0) + (phase.extraAll || 0));

@@ -28,7 +28,9 @@ export function weekCards(week, subtitleFor) {
       return dayCard(k, { done: true, href: `#/workout/${k}/s-${s.id}`,
         subtitle: `${fmtDate(s.date, { weekday: "short", day: "numeric", month: "short" })} · toca para editar` });
     }
-    if (week > current) return dayCard(k, { subtitle: `Disponible desde el ${opensOn}` });
+    if (week > current) {
+      return dayCard(k, { subtitle: `Vista previa · se registra desde el ${opensOn}`, href: `#/workout/${k}/p-${week}`, label: "Ver" });
+    }
     return dayCard(k, { next: k === next, subtitle: subtitleFor(k),
       href: week === current ? `#/workout/${k}` : `#/workout/${k}/w-${week}`,
       label: week < current ? "Registrar" : "" });

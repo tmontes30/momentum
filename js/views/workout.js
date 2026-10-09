@@ -1,9 +1,9 @@
-import { EXERCISES, DAYS, prescription, phaseFor, weekOf, weekStart, sessionPlan, STRETCH_MIN } from "../program.js";
+import { EXERCISES, DAYS, prescription, phaseFor, weekOf, weekStart, sessionPlan, routineCode, STRETCH_MIN } from "../program.js";
 import { exerciseHistory, suggestion, summarizeSets, workingWeight, fmtKg } from "../calc.js";
 import { addSession, updateSession, deleteSession } from "../db.js";
 import { state, program, sessionsInWeek, sessionWeek, sortSessions, isoDate, todayISO } from "../state.js";
 import { esc, go, toast, fmtDate, storage, alertDone, icon } from "../ui.js";
-import { render as renderTrain } from "./train.js";
+import { render as renderTrain, renderPreview } from "./train.js";
 
 const DRAFT_MAX_AGE = 12 * 3600 * 1000;
 const TREND_ICON = { up: "up", keep: "flat", down: "down", start: "info" };
@@ -31,6 +31,8 @@ export function render(el, dayKey, mode = "") {
   teardown = null;
   // Sin día: pestaña "Entrenar" (entrenamiento de hoy, herramientas y biblioteca).
   if (!dayKey || !DAYS[dayKey]) return renderTrain(el);
+  // #/workout/A/p-5 → vista previa (solo lectura) del día A en la semana 5.
+  if (mode.startsWith("p-")) return renderPreview(el, dayKey, parseInt(mode.slice(2), 10));
 
   const p = state.profile;
   const { week: current, plan } = program();
@@ -98,7 +100,8 @@ export function render(el, dayKey, mode = "") {
         Puedes terminarlo así, o cargar la rutina actual (se borran las series anotadas en este borrador).
         <button class="btn btn-sm" id="refresh-plan">Usar rutina actual</button></p></div>` : ""}
       ${editing ? "" : `<div class="notice">${icon("timer")}<p><b>~${sess.minutes} min + ${STRETCH_MIN} min de elongación</b> (calentamiento incluido)${sess.trims.length
-        ? `. Ajustado a tus ${sess.budget} min: ${sess.trims.join(", ")}.` : `, dentro de tus ${sess.budget} min.`}</p></div>`}
+        ? `. Ajustado a tus ${sess.budget} min: ${sess.trims.join(", ")}.` : `, dentro de tus ${sess.budget} min.`}
+        <span class="code-tag">Código de rutina ${routineCode(sess, phase)}</span></p></div>`}
       ${editing || targetWeek !== current ? "" : `<details class="card warmup"><summary>${icon("timer")} Calentamiento · 5 min</summary><p>${day.warmup}</p></details>`}
       ${hasPairs && !editing ? `<div class="notice">${icon("zap")}<p>${phase.superset
         ? "<b>Superseries.</b> Haz A1 y A2 seguidos, descansa y repite. Luego B1/B2, etc."

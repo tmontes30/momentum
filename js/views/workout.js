@@ -59,10 +59,18 @@ export function render(el, dayKey, mode = "") {
   pool = state.sessions.filter((s) => s.id !== editing?.id && new Date(s.date) < refTime);
 
   const draftKey = `momentum-draft-${state.user.uid}-${dayKey}-${editing ? `s-${editing.id}` : `w-${targetWeek}`}`;
+  // Firma de la rutina actual: si cambió (nueva versión, otro plazo o intensidad), un borrador viejo no se reutiliza a ciegas.
+  const planKey = sess.slots.map((s) => `${s.exId}:${s.sets}`).join(",") + `|${phase.n}`;
   let draft = storage.get(draftKey);
-  if (!draft || Date.now() - draft.startedAt > DRAFT_MAX_AGE) {
+  if (draft && Date.now() - draft.startedAt > DRAFT_MAX_AGE) draft = null;
+  let staleDraft = false;
+  if (draft && !editing && draft.planKey !== planKey) {
+    if (draft.items.some((it) => it.sets.some((s) => s.done))) staleDraft = true; // tiene series anotadas: se avisa
+    else draft = null; // no tiene nada anotado: se reemplaza por la rutina actual
+  }
+  if (!draft) {
     const ids = sess.slots.map((s) => s.exId);
-    draft = { startedAt: Date.now(), date: defaultDate, items: editing ? itemsFromSession(editing, ids) : ids.map((exId, i) => ({ exId, sets: freshSets(exId, slotRx(i, exId)) })) };
+    draft = { startedAt: Date.now(), date: defaultDate, planKey, items: editing ? itemsFromSession(editing, ids) : ids.map((exId, i) => ({ exId, sets: freshSets(exId, slotRx(i, exId)) })) };
   }
   draft.date ||= defaultDate;
   const save = () => storage.set(draftKey, draft);
@@ -86,6 +94,9 @@ export function render(el, dayKey, mode = "") {
         <span class="grow"><b>Fecha</b><small id="date-week" class="muted">${weekLabel(draft.date)}</small></span>
         <input type="date" id="date" value="${draft.date}" min="${minDate}" max="${todayISO()}" required>
       </label>
+      ${staleDraft ? `<div class="notice warn">${icon("info")}<p><b>Este entrenamiento se empezó con una versión anterior de la rutina.</b>
+        Puedes terminarlo así, o cargar la rutina actual (se borran las series anotadas en este borrador).
+        <button class="btn btn-sm" id="refresh-plan">Usar rutina actual</button></p></div>` : ""}
       ${editing ? "" : `<div class="notice">${icon("timer")}<p><b>~${sess.minutes} min + ${STRETCH_MIN} min de elongación</b> (calentamiento incluido)${sess.trims.length
         ? `. Ajustado a tus ${sess.budget} min: ${sess.trims.join(", ")}.` : `, dentro de tus ${sess.budget} min.`}</p></div>`}
       ${editing || targetWeek !== current ? "" : `<details class="card warmup"><summary>${icon("timer")} Calentamiento · 5 min</summary><p>${day.warmup}</p></details>`}
@@ -178,6 +189,12 @@ export function render(el, dayKey, mode = "") {
     if (btn.id === "reset") {
       const msg = editing ? "¿Descartar los cambios sin guardar?" : "¿Reiniciar este entrenamiento? Se borrará lo anotado.";
       if (!confirm(msg)) return;
+      storage.remove(draftKey);
+      stopRest();
+      return render(el, dayKey, mode);
+    }
+    if (btn.id === "refresh-plan") {
+      if (!confirm("¿Cargar la rutina actual? Se borrarán las series anotadas en este borrador.")) return;
       storage.remove(draftKey);
       stopRest();
       return render(el, dayKey, mode);

@@ -101,3 +101,32 @@ if (!isConfigured) {
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
+
+// ── Detección de versión nueva ───────────────────────────────────────────────
+// El iPhone mantiene la app "dormida" sin recargarla: al volver a ella (y cada 30 min) se compara
+// version.json con el de esta copia y, si cambió, se ofrece actualizar.
+async function fetchVersion() {
+  try {
+    const r = await fetch(`./version.json?t=${Date.now()}`, { cache: "no-store" });
+    return r.ok ? (await r.json()).version : null;
+  } catch { return null; }
+}
+
+async function checkForUpdate() {
+  const latest = await fetchVersion();
+  if (!latest) return;
+  if (!state.appVersion) { state.appVersion = latest; return; }
+  if (latest !== state.appVersion && !document.getElementById("update-bar")) {
+    const bar = document.createElement("div");
+    bar.id = "update-bar";
+    bar.className = "update-bar";
+    bar.innerHTML = `<span>Hay una versión nueva de Momentum</span><button class="btn btn-sm">Actualizar</button>`;
+    // Lo anotado en un entrenamiento queda guardado en el teléfono, así que recargar no pierde nada.
+    bar.querySelector("button").addEventListener("click", () => location.reload());
+    document.body.appendChild(bar);
+  }
+}
+
+checkForUpdate();
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForUpdate(); });
+setInterval(checkForUpdate, 30 * 60 * 1000);

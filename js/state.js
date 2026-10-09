@@ -5,6 +5,7 @@ export const state = {
   profile: null,
   sessions: [],
   bodyweight: [],
+  appVersion: null, // versión publicada que cargó esta copia de la app (version.json)
 };
 
 export function program(today = new Date()) {

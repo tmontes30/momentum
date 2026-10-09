@@ -40,6 +40,7 @@ export function render(el) {
 
       <button class="btn btn-block btn-ghost" id="logout">Cerrar sesión</button>
       <p class="small muted center">Comparte la página con tus amigos: cada uno entra con su Google y tiene su propio perfil.</p>
+      <p class="small muted center">Versión ${esc(state.appVersion || "–")}</p>
     </div>`;
   wireIntensityHint(el);
 

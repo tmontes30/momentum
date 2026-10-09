@@ -20,6 +20,11 @@ function Api($method, $path, $body) {
   return $out | ConvertFrom-Json
 }
 
+# Each publish stamps version.json; open copies of the app compare it to detect a new version.
+$version = (Get-Date).ToString("yyyy-MM-dd HH:mm")
+[IO.File]::WriteAllText((Join-Path $root "version.json"), "{`"version`":`"$version`"}", (New-Object Text.UTF8Encoding $false))
+Write-Host "Version $version"
+
 $branch = (& $gh api "repos/$repo" | ConvertFrom-Json).default_branch
 $parent = (& $gh api "repos/$repo/git/ref/heads/$branch" | ConvertFrom-Json).object.sha
 

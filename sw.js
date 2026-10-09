@@ -1,6 +1,6 @@
 // Service worker: red primero y caché como respaldo, así siempre se ve la última versión publicada
 // y la interfaz igual abre si no hay conexión en el gimnasio.
-const CACHE = "momentum-v4";
+const CACHE = "momentum-v5";
 const SHELL = [
   "./", "./index.html", "./css/styles.css", "./manifest.webmanifest",
   "./js/app.js", "./js/firebase.js", "./js/firebase-config.js", "./js/db.js", "./js/state.js",
@@ -33,6 +33,7 @@ self.addEventListener("fetch", (e) => {
     url.hostname.endsWith("fonts.gstatic.com")
   );
   if (!cacheable) return; // Firestore, Auth, etc. van directo a la red.
+  if (url.pathname.endsWith("/version.json")) return; // la verificación de versión siempre va a la red y no se guarda
 
   e.respondWith(
     fetch(req)

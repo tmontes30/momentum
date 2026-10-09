@@ -8,6 +8,26 @@ import { weekCards } from "./home.js";
 
 const DRAFT_MAX_AGE = 12 * 3600 * 1000;
 const PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
+const PRESET_BARS = [20, 15, 10, 0];
+const BARBELL_KEY = "momentum-barbell";
+
+// Color por peso (estándar de discos olímpicos); los de otro peso usan el gris.
+function plateClass(pl) {
+  return { 25: "p25", 20: "p20", 15: "p15", 10: "p10", 5: "p5", 2.5: "p2_5", 1.25: "p1_25" }[pl] || "pother";
+}
+
+// Alto del disco en el dibujo según su peso (los de 20-25 kg son los más grandes).
+function discHeight(pl) {
+  return Math.round(40 + 70 * Math.min(1, pl / 20));
+}
+
+// Acepta "12,5" o "12.5". Devuelve "" si está vacío y null si no es un número válido.
+function parseKg(text) {
+  const t = String(text).trim().replace(",", ".");
+  if (t === "") return "";
+  const n = Number(t);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
+}
 
 // Borrador en curso de un día de esta semana (si existe y tiene algo anotado).
 function draftOf(dayKey, week) {
@@ -66,17 +86,35 @@ export function render(el) {
       </section>
 
       <section class="card">
-        <h3 class="h-ico">${icon("target")} Calculadora de discos</h3>
-        <div class="row2">
-          <label class="field"><span>Peso total</span>
-            <input type="number" id="pl-total" inputmode="decimal" step="0.5" min="0" placeholder="Ej: 60"></label>
-          <label class="field"><span>Barra</span>
-            <select id="pl-bar" class="select">
-              <option value="20">Olímpica 20 kg</option><option value="15">Olímpica 15 kg</option>
-              <option value="10">Barra corta 10 kg</option><option value="0">Sin barra / máquina</option>
-            </select></label>
+        <h3 class="h-ico">${icon("target")} Barra y discos</h3>
+        <div class="bb-total"><b id="bb-total">0 kg</b><span id="bb-side" class="muted small"></span></div>
+        <div class="barbell" id="bb-visual" role="img" aria-label="Barra cargada"></div>
+        <p class="small muted center" id="bb-hint">Toca un disco de la barra para sacarlo.</p>
+
+        <p class="mini-label">Barra</p>
+        <div class="chips" id="bb-bars">
+          ${[20, 15, 10, 0].map((b) => `<button class="chip" data-bar="${b}">${b ? `${b} kg` : "Sin barra"}</button>`).join("")}
+          <span class="chip-input"><input id="bb-bar" type="text" inputmode="decimal" autocomplete="off" placeholder="Otra" aria-label="Peso de la barra"> kg</span>
         </div>
-        <div id="pl-out" class="plates muted small">Escribe el peso total para ver qué discos poner en cada lado.</div>
+
+        <p class="mini-label">Agregar disco <span class="muted">(se pone uno en cada lado)</span></p>
+        <div class="chips" id="bb-plates">
+          ${PLATES.map((pl) => `<button class="plate ${plateClass(pl)}" data-add="${pl}" aria-label="Agregar ${fmtKg(pl)} kg por lado">${fmtKg(pl)}</button>`).join("")}
+          <span class="chip-input"><input id="bb-other" type="text" inputmode="decimal" autocomplete="off" placeholder="Otro" aria-label="Disco de otro peso"> kg
+            <button class="btn btn-sm" id="bb-other-add">+</button></span>
+        </div>
+
+        <div class="row2">
+          <button class="btn" id="bb-undo">Quitar último</button>
+          <button class="btn" id="bb-clear">Vaciar barra</button>
+        </div>
+
+        <p class="mini-label">Armar para un total</p>
+        <div class="inline-form two">
+          <input id="bb-target" type="text" inputmode="decimal" autocomplete="off" placeholder="Ej: 62,5 kg">
+          <button class="btn btn-primary" id="bb-fill">Cargar</button>
+        </div>
+        <p class="small muted" id="bb-msg"></p>
       </section>
 
       <section class="card">
@@ -126,28 +164,94 @@ export function render(el) {
   }));
   paintTimer();
 
-  // ── Calculadora de discos ──
-  const plTotal = el.querySelector("#pl-total");
-  const plBar = el.querySelector("#pl-bar");
-  const plOut = el.querySelector("#pl-out");
-  const calcPlates = () => {
-    const total = Number(plTotal.value);
-    const bar = Number(plBar.value);
-    if (!total) { plOut.textContent = "Escribe el peso total para ver qué discos poner en cada lado."; return; }
-    if (total < bar) { plOut.textContent = `El peso total no puede ser menor que la barra (${bar} kg).`; return; }
-    let side = (total - bar) / 2;
-    const used = [];
-    for (const pl of PLATES) while (side >= pl - 1e-9) { used.push(pl); side = Math.round((side - pl) * 100) / 100; }
-    const exact = side < 0.01;
-    plOut.classList.toggle("muted", false);
-    plOut.innerHTML = used.length
-      ? `<p class="small muted">Por cada lado${bar ? ` (barra de ${bar} kg)` : ""}:</p>
-         <div class="chips">${used.map((pl) => `<span class="plate p${String(pl).replace(".", "_")}">${fmtKg(pl)}</span>`).join("")}</div>
-         ${exact ? "" : `<p class="small muted">Faltan ${fmtKg(side * 2)} kg para llegar exacto: usa el peso más cercano.</p>`}`
-      : `<p class="small muted">Solo la barra (${bar} kg).</p>`;
+  // ── Barra y discos ──
+  // Los discos se cargan iguales en ambos lados; `plates` es un lado, del centro hacia afuera.
+  const saved = storage.get(BARBELL_KEY) || {};
+  let bar = Number.isFinite(saved.bar) ? saved.bar : 20;
+  let plates = Array.isArray(saved.plates) ? saved.plates.filter((p) => p > 0) : [];
+  const bbVisual = el.querySelector("#bb-visual");
+  const bbMsg = el.querySelector("#bb-msg");
+  const barInput = el.querySelector("#bb-bar");
+  const sum = (arr) => Math.round(arr.reduce((a, b) => a + b, 0) * 100) / 100;
+
+  const paintBar = () => {
+    const side = sum(plates);
+    const total = Math.round((bar + side * 2) * 100) / 100;
+    el.querySelector("#bb-total").textContent = `${fmtKg(total)} kg`;
+    el.querySelector("#bb-side").textContent = `${bar ? `Barra ${fmtKg(bar)} kg` : "Sin barra"} · ${fmtKg(side)} kg por lado`;
+    const disc = (pl, i) => `<button class="disc ${plateClass(pl)}" style="height:${discHeight(pl)}px" data-remove="${i}"
+      aria-label="Sacar disco de ${fmtKg(pl)} kg">${fmtKg(pl)}</button>`;
+    // Lado izquierdo de afuera hacia adentro; lado derecho de adentro hacia afuera (los grandes quedan al centro).
+    const left = plates.map(disc).reverse().join("");
+    const right = plates.map(disc).join("");
+    bbVisual.innerHTML = `<div class="bb-end">${left}</div><span class="bb-collar"></span>
+      <span class="bb-shaft">${bar ? `${fmtKg(bar)} kg` : "máquina"}</span><span class="bb-collar"></span><div class="bb-end">${right}</div>`;
+    el.querySelector("#bb-hint").hidden = !plates.length;
+    el.querySelectorAll("#bb-bars [data-bar]").forEach((c) => c.classList.toggle("on", Number(c.dataset.bar) === bar && barInput.value === ""));
+    storage.set(BARBELL_KEY, { bar, plates });
   };
-  plTotal.addEventListener("input", calcPlates);
-  plBar.addEventListener("change", calcPlates);
+
+  // Lleva los discos a orden real: los más pesados más cerca del centro.
+  const addPlate = (pl) => {
+    if (!(pl > 0)) return;
+    plates.push(Math.round(pl * 100) / 100);
+    plates.sort((a, b) => b - a);
+    bbMsg.textContent = "";
+    paintBar();
+  };
+
+  el.querySelector("#bb-bars").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-bar]");
+    if (!b) return;
+    bar = Number(b.dataset.bar);
+    barInput.value = "";
+    paintBar();
+  });
+  barInput.addEventListener("input", () => {
+    const v = parseKg(barInput.value);
+    if (v === null) return;
+    bar = v === "" ? 20 : v;
+    paintBar();
+  });
+  el.querySelector("#bb-plates").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-add]");
+    if (b) addPlate(Number(b.dataset.add));
+  });
+  const other = el.querySelector("#bb-other");
+  const addOther = () => {
+    const v = parseKg(other.value);
+    if (!v) { toast("Escribe el peso del disco, por ejemplo 7,5"); return; }
+    addPlate(v);
+    other.value = "";
+  };
+  el.querySelector("#bb-other-add").addEventListener("click", addOther);
+  other.addEventListener("keydown", (e) => { if (e.key === "Enter") addOther(); });
+  bbVisual.addEventListener("click", (e) => {
+    const d = e.target.closest("[data-remove]");
+    if (!d) return;
+    plates.splice(Number(d.dataset.remove), 1);
+    bbMsg.textContent = "";
+    paintBar();
+  });
+  el.querySelector("#bb-undo").addEventListener("click", () => { plates.pop(); bbMsg.textContent = ""; paintBar(); });
+  el.querySelector("#bb-clear").addEventListener("click", () => { plates = []; bbMsg.textContent = ""; paintBar(); });
+
+  const fill = () => {
+    const target = parseKg(el.querySelector("#bb-target").value);
+    if (!target) { bbMsg.textContent = "Escribe el total que quieres levantar."; return; }
+    if (target < bar) { bbMsg.textContent = `El total no puede ser menor que la barra (${fmtKg(bar)} kg).`; return; }
+    let side = Math.round(((target - bar) / 2) * 100) / 100;
+    plates = [];
+    for (const pl of PLATES) while (side >= pl - 1e-9) { plates.push(pl); side = Math.round((side - pl) * 100) / 100; }
+    const missing = Math.round(side * 2 * 100) / 100;
+    bbMsg.textContent = side > 0.009
+      ? `Con discos estándar ${missing === 1 ? "falta 1 kg" : `faltan ${fmtKg(missing)} kg`} para llegar exacto; puedes agregar un disco con "Otro".` : "";
+    paintBar();
+  };
+  el.querySelector("#bb-fill").addEventListener("click", fill);
+  el.querySelector("#bb-target").addEventListener("keydown", (e) => { if (e.key === "Enter") fill(); });
+  if (!PRESET_BARS.includes(bar)) barInput.value = fmtKg(bar);
+  paintBar();
 
   // ── Biblioteca ──
   const records = new Map(exerciseProgress().map((r) => [r.id, r]));

@@ -282,6 +282,40 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-
 .plate.p10 { background: #067647; }
 .plate.p5, .plate.p2_5, .plate.p1_25 { min-width: 36px; height: 36px; font-size: 12px; }
 
+button.plate { appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 800; touch-action: manipulation; }
+button.plate:active { transform: scale(0.94); }
+.plate.pother, .disc.pother { background: #667085; }
+
+.bb-total { display: flex; flex-direction: column; align-items: center; margin: 4px 0 2px; }
+.bb-total b { font-size: 40px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.barbell {
+  display: flex; align-items: center; justify-content: center; height: 124px; margin: 8px 0 2px; overflow: hidden;
+}
+.bb-end { display: flex; align-items: center; gap: 2px; min-width: 0; flex: 0 1 auto; }
+.disc {
+  appearance: none; border: 0; cursor: pointer; padding: 0; border-radius: 5px; color: #fff;
+  flex: 0 1 24px; min-width: 12px; width: 24px; font: inherit; font-size: 9px; font-weight: 800;
+  writing-mode: vertical-rl; text-orientation: mixed; background: #475467; touch-action: manipulation;
+}
+.disc.p25 { background: #b42318; }
+.disc.p20 { background: #1d4ed8; }
+.disc.p15 { background: #b54708; }
+.disc.p10 { background: #067647; }
+.disc.p5 { background: #475467; }
+.disc.p2_5, .disc.p1_25 { background: #344054; }
+.bb-collar { width: 8px; height: 26px; border-radius: 3px; background: #98a2b3; flex: none; }
+.bb-shaft {
+  flex: 0 0 auto; min-width: 72px; height: 12px; border-radius: 6px; background: linear-gradient(#d0d5dd, #98a2b3);
+  display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #344054; padding: 0 6px; line-height: 1;
+}
+.bb-shaft { height: 16px; }
+.mini-label { font-size: 13px; font-weight: 600; margin: 14px 0 0; }
+.chip-input {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted);
+}
+.chip-input input { width: 76px; min-height: 36px; padding: 6px 10px; border-radius: 99px; font-size: 15px; }
+.inline-form.two { grid-template-columns: 1fr auto; margin-top: 6px; }
+
 #lib-q { margin-top: 10px; }
 .lib-item { border-bottom: 1px solid var(--line); }
 .lib-item:last-child { border-bottom: 0; }

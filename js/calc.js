@@ -27,17 +27,31 @@ export function bmr({ sex, weightKg, heightCm, age }) {
 
 const ACTIVITY = 1.45; // 3 días de gimnasio + actividad diaria ligera
 
-const GOAL_ADJUST = { tonificar: -0.1, "bajar grasa": -0.2, "ganar músculo": 0.1 };
-const PROTEIN_PER_KG = { tonificar: 1.8, "bajar grasa": 2.0, "ganar músculo": 1.8 };
+// Calibrado con pautas reales de nutricionista (régimen hipocalórico e hiperproteico):
+// las calorías salen de la masa libre de grasa (~26 kcal por kg al bajar grasa) y la proteína por kg de peso.
+const KCAL_PER_FFM = { "bajar grasa": 26, tonificar: 30, "ganar músculo": 42 };
+const PROTEIN_PER_KG = { "bajar grasa": { m: 2.1, f: 2.0 }, tonificar: { m: 2.0, f: 1.9 }, "ganar músculo": { m: 1.8, f: 1.8 } };
+const FAT_PER_KG = { "bajar grasa": 0.45, tonificar: 0.7, "ganar músculo": 0.9 };
+
+// % de grasa corporal estimado desde el IMC (Deurenberg), si el perfil no tiene una medición.
+export function bodyFatEstimate({ weightKg, heightCm, sex }, age) {
+  const value = 1.2 * bmi(weightKg, heightCm) + 0.23 * age - 10.8 * (sex === "m" ? 1 : 0) - 5.4;
+  return Math.min(50, Math.max(5, value));
+}
 
 export function metrics(profile) {
   const age = ageFrom(profile.birthDate);
+  const goal = KCAL_PER_FFM[profile.goal] ? profile.goal : "tonificar";
+  const sex = profile.sex === "m" ? "m" : "f";
   const base = bmr({ ...profile, age });
   const tdee = base * ACTIVITY;
-  const minKcal = profile.sex === "m" ? 1500 : 1200;
-  const target = Math.max(minKcal, tdee * (1 + (GOAL_ADJUST[profile.goal] ?? -0.1)));
-  const protein = profile.weightKg * (PROTEIN_PER_KG[profile.goal] ?? 1.8);
-  const fat = profile.weightKg * 0.9;
+  const measured = Number(profile.bodyFatPct) > 0;
+  const bodyFat = measured ? Number(profile.bodyFatPct) : bodyFatEstimate(profile, age);
+  const ffm = profile.weightKg * (1 - bodyFat / 100);
+  const minKcal = sex === "m" ? 1400 : 1100;
+  const target = Math.max(minKcal, ffm * KCAL_PER_FFM[goal]);
+  const protein = profile.weightKg * PROTEIN_PER_KG[goal][sex];
+  const fat = profile.weightKg * FAT_PER_KG[goal];
   const carbs = Math.max(0, (target - protein * 4 - fat * 9) / 4);
   const imc = bmi(profile.weightKg, profile.heightCm);
   return {
@@ -46,11 +60,14 @@ export function metrics(profile) {
     bmiCategory: bmiCategory(imc),
     bmr: Math.round(base),
     tdee: Math.round(tdee),
+    bodyFat: Math.round(bodyFat * 10) / 10,
+    bodyFatMeasured: measured,
+    ffm: Math.round(ffm * 10) / 10,
     kcal: Math.round(target / 10) * 10,
     protein: Math.round(protein),
     fat: Math.round(fat),
     carbs: Math.round(carbs),
-    water: Math.round(profile.weightKg * 0.035 * 10) / 10,
+    water: Math.round(Math.min(3, Math.max(2, profile.weightKg * 0.03)) * 10) / 10,
   };
 }
 

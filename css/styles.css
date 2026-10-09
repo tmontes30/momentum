@@ -576,6 +576,35 @@ th { font-size: 12px; color: var(--muted); font-weight: 600; }
 .right { text-align: right; flex: none; }
 a.chip { text-decoration: none; }
 
+/* ── Alimentación ── */
+.tiles-link { color: inherit; text-decoration: none; }
+.tiles-link .tile { transition: transform 0.08s; }
+.tiles-link:active .tile { transform: scale(0.98); }
+.meals { display: flex; flex-direction: column; gap: 10px; }
+.meal .section-head { margin-bottom: 4px; }
+.meal-list { list-style: none; margin: 0; padding: 0; }
+.meal-list li { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.meal-list li:last-child { border-bottom: 0; }
+.meal-list small { font-size: 12px; line-height: 1.35; }
+.portion {
+  flex: none; min-width: 36px; height: 36px; padding: 0 6px; border-radius: 10px; display: grid; place-items: center;
+  font-weight: 800; font-size: 15px; color: var(--accent); background: var(--accent-soft);
+}
+.portion-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.portion-row div { display: flex; flex-direction: column; align-items: center; padding: 10px 4px; border-radius: 12px; background: var(--surface-2); }
+.portion-row b { font-size: 20px; font-weight: 800; color: var(--accent); }
+.portion-row span { font-size: 11px; color: var(--muted); text-align: center; }
+.portion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.portion-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.portion-grid input { min-height: 42px; padding: 8px 10px; text-align: center; font-weight: 700; }
+.time-input { width: auto; min-height: 36px; padding: 6px 10px; font-size: 14px; }
+textarea {
+  font: inherit; font-size: 16px; color: var(--text); background: var(--surface-2); border: 1px solid transparent;
+  border-radius: 12px; padding: 12px 14px; width: 100%; resize: vertical;
+}
+textarea:focus { outline: none; border-color: var(--accent); }
+.lib-item table { margin: 0 0 10px; font-size: 13px; }
+
 .update-bar {
   position: fixed; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top)); z-index: 60;
   max-width: 536px; margin: 0 auto;

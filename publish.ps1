@@ -28,8 +28,11 @@ Write-Host "Version $version"
 $branch = (& $gh api "repos/$repo" | ConvertFrom-Json).default_branch
 $parent = (& $gh api "repos/$repo/git/ref/heads/$branch" | ConvertFrom-Json).object.sha
 
+# Never published: hidden files/folders and private documents (the repo is PUBLIC).
+$exclude = '\\\.|\\Pauta nutricional\\|\.pdf$'
+
 $tree = @()
-Get-ChildItem $root -Recurse -File | Where-Object { $_.FullName -notmatch '\\\.' } | ForEach-Object {
+Get-ChildItem $root -Recurse -File | Where-Object { $_.FullName -notmatch $exclude } | ForEach-Object {
   $rel = $_.FullName.Substring($root.Length + 1).Replace("\", "/")
   $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($_.FullName))
   $blob = Api POST "repos/$repo/git/blobs" @{ content = $b64; encoding = "base64" }

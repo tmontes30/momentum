@@ -15,7 +15,7 @@ export function render(el) {
         ${p.photoURL ? `<img class="avatar" src="${esc(p.photoURL)}" alt="" referrerpolicy="no-referrer">` : ""}
       </header>
 
-      <section class="card"><h3>Tus números</h3>${metricsHTML(p)}</section>
+      <section class="card"><h3>Tus números</h3>${metricsHTML(p, { link: true })}</section>
 
       <section class="card">
         <h3>Tu plan</h3>

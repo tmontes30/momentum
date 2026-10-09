@@ -7,8 +7,9 @@ import * as home from "./views/home.js";
 import * as workout from "./views/workout.js";
 import * as progress from "./views/progress.js";
 import * as profile from "./views/profile.js";
+import * as nutrition from "./views/nutrition.js";
 
-const views = { login, onboarding, home, workout, progress, profile };
+const views = { login, onboarding, home, workout, progress, profile, nutrition };
 const NAV_VIEWS = ["home", "workout", "progress", "profile"];
 
 const main = document.getElementById("view");

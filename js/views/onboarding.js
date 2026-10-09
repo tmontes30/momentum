@@ -1,6 +1,7 @@
 import { saveProfile, addBodyweight } from "../db.js";
 import { metrics, fmtKg } from "../calc.js";
 import { planOf, INTENSITY, PLAN_OPTIONS, SESSION_OPTIONS } from "../program.js";
+import { planFor } from "../nutrition.js";
 import { state, todayISO, addMonthsISO } from "../state.js";
 import { esc, go, toast } from "../ui.js";
 
@@ -23,7 +24,10 @@ export function aboutFields(p = {}) {
         <input type="number" name="heightCm" inputmode="numeric" min="120" max="230" value="${p.heightCm ?? ""}" required></label>
       <label class="field"><span>Peso (kg)</span>
         <input type="number" name="weightKg" inputmode="decimal" step="0.1" min="30" max="250" value="${p.weightKg ?? ""}" required></label>
-    </div>`;
+    </div>
+    <label class="field"><span>% de grasa corporal <small class="muted">(opcional)</small></span>
+      <input type="text" name="bodyFatPct" inputmode="decimal" autocomplete="off" value="${p.bodyFatPct ? String(p.bodyFatPct).replace(".", ",") : ""}" placeholder="Ej: 21,6">
+      <small class="muted">Si te midieron con bioimpedancia o tu nutricionista te lo dio. Si lo dejas vacío, se estima.</small></label>`;
 }
 
 export function goalFields(p = {}) {
@@ -84,21 +88,28 @@ export function readProfileForm(form) {
   if (out.weightKg) out.weightKg = Number(out.weightKg);
   if ("planWeeks" in out) out.planWeeks = out.planWeeks ? Number(out.planWeeks) : null;
   if ("sessionMinutes" in out) out.sessionMinutes = Number(out.sessionMinutes) || 60;
+  if ("bodyFatPct" in out) {
+    const bf = Number(String(out.bodyFatPct).replace(",", "."));
+    out.bodyFatPct = bf > 3 && bf < 60 ? bf : null;
+  }
   return out;
 }
 
-export function metricsHTML(p) {
+// `link`: las tarjetas abren la pantalla de Alimentación (en Perfil; no durante el onboarding).
+export function metricsHTML(p, { link = false } = {}) {
   const m = metrics(p);
+  const plan = planFor(p);
+  const tiles = `
+    <div class="tile"><b>${m.bmi.toFixed(1).replace(".", ",")}</b><span>IMC · ${m.bmiCategory}</span></div>
+    <div class="tile"><b>${fmtKg(m.bodyFat)}%</b><span>grasa corporal${m.bodyFatMeasured ? "" : " (estimada)"}</span></div>
+    <div class="tile accent"><b>${Number(plan.kcal).toLocaleString("es")}</b><span>kcal objetivo diarias</span></div>
+    <div class="tile"><b>${plan.protein} g</b><span>proteína al día</span></div>`;
   return `
-    <div class="tiles tiles-2">
-      <div class="tile"><b>${m.bmi.toFixed(1).replace(".", ",")}</b><span>IMC · ${m.bmiCategory}</span></div>
-      <div class="tile"><b>${m.tdee.toLocaleString("es")}</b><span>kcal que gastas al día</span></div>
-      <div class="tile accent"><b>${m.kcal.toLocaleString("es")}</b><span>kcal objetivo diarias</span></div>
-      <div class="tile"><b>${m.protein} g</b><span>proteína al día</span></div>
-    </div>
-    <p class="small muted">Metabolismo basal ${m.bmr.toLocaleString("es")} kcal (Mifflin-St Jeor) × actividad 1,45.
-      Macros sugeridos: ${m.protein} g proteína · ${m.fat} g grasa · ${m.carbs} g carbohidratos · ${fmtKg(m.water)} L de agua.
-      Son estimaciones: si tienes alguna condición médica, consulta a un profesional.</p>`;
+    ${link ? `<a class="tiles tiles-2 tiles-link" href="#/nutrition" aria-label="Ver plan de alimentación">${tiles}</a>` : `<div class="tiles tiles-2">${tiles}</div>`}
+    <p class="small muted">Estimado con tu masa libre de grasa (${fmtKg(m.ffm)} kg) y tu objetivo:
+      ${plan.protein} g proteína · ${plan.cho} g carbohidratos · ${plan.fat} g grasa · ${fmtKg(plan.water)} L de agua.
+      Son orientaciones: si tienes alguna condición médica, consulta a un profesional.</p>
+    ${link ? `<a class="btn btn-block" href="#/nutrition">Ver plan de alimentación: desayuno, almuerzo, colación y cena</a>` : ""}`;
 }
 
 // ── Pantalla de onboarding ──────────────────────────────────────────────────

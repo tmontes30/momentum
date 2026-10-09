@@ -1,10 +1,10 @@
 // Service worker: red primero y caché como respaldo, así siempre se ve la última versión publicada
 // y la interfaz igual abre si no hay conexión en el gimnasio.
-const CACHE = "momentum-v5";
+const CACHE = "momentum-v6";
 const SHELL = [
   "./", "./index.html", "./css/styles.css", "./manifest.webmanifest",
   "./js/app.js", "./js/firebase.js", "./js/firebase-config.js", "./js/db.js", "./js/state.js",
-  "./js/ui.js", "./js/calc.js", "./js/program.js", "./js/stats.js",
+  "./js/ui.js", "./js/calc.js", "./js/program.js", "./js/stats.js", "./js/nutrition.js", "./js/views/nutrition.js",
   "./js/views/login.js", "./js/views/onboarding.js", "./js/views/home.js",
   "./js/views/workout.js", "./js/views/train.js", "./js/views/progress.js", "./js/views/profile.js",
   "./icons/icon-192.png",

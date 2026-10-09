@@ -148,8 +148,13 @@ export async function render(el) {
     el.querySelector("#badges").addEventListener("click", (e) => {
       const b = e.target.closest("[data-page]");
       if (!b || b.disabled) return;
+      // Mantiene la flecha en el mismo lugar de la pantalla al cambiar de página (sin saltos de scroll).
+      const before = b.closest(".pager").getBoundingClientRect().top;
       badgePage += Number(b.dataset.page);
-      el.querySelector("#badges").innerHTML = badgesPage(achieved);
+      const box = el.querySelector("#badges");
+      box.innerHTML = badgesPage(achieved);
+      const anchor = box.querySelector(".pager") || box;
+      window.scrollBy(0, anchor.getBoundingClientRect().top - before);
     });
 
     const openDetail = async (id) => {

@@ -91,7 +91,7 @@ export function achievements() {
   const records = exerciseProgress().filter((e) => e.best > e.first).length;
   const vol = totalVolume();
   const bw = state.bodyweight;
-  const lost = bw.length >= 2 ? bw[0].kg - Math.min(...bw.map((b) => b.kg)) : 0;
+  // Siempre son 20 logros (2 páginas de 10 en Progreso), iguales para todas las cuentas.
   const list = [
     { icon: "flag", name: "Primer paso", desc: "Completa tu primer entrenamiento", value: n, goal: 1 },
     { icon: "done", name: "Semana completa", desc: "Haz los 3 días en una semana", value: fullWeeks, goal: 1 },
@@ -101,11 +101,8 @@ export function achievements() {
     { icon: "trophy", name: "Coleccionista", desc: "Récords en 10 ejercicios", value: records, goal: 10 },
     { icon: "chart", name: "10 toneladas", desc: "10.000 kg levantados en total", value: Math.round(vol), goal: 10000 },
     { icon: "chart", name: "50 toneladas", desc: "50.000 kg levantados en total", value: Math.round(vol), goal: 50000 },
-    { icon: "target", name: "Disciplina", desc: "25 entrenamientos", value: n, goal: 25 },
     { icon: "calendar", name: "Mitad del plan", desc: "Llega a la mitad de tu plan", value: Math.min(week, total), goal: Math.ceil(total / 2) },
   ];
-  if (bw.length >= 2 && state.profile.goal !== "ganar músculo") list.push({ icon: "down", name: "Primeros 2 kg", desc: "Baja 2 kg desde tu primer registro de peso", value: Math.round(lost * 10) / 10, goal: 2, unit: " kg" });
-
   // Segunda tanda: metas de mediano y largo plazo.
   const progress = exerciseProgress();
   const best = (id) => progress.find((p) => p.id === id)?.best || 0;

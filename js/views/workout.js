@@ -134,7 +134,7 @@ export function render(el, dayKey, mode = "") {
     draft.items[i].sets.forEach((set, j) => {
       if (j <= s || set.done) return;
       set.kg = val;
-      card.querySelector(`[data-s="${j}"] input[data-f="kg"]`).value = val;
+      card.querySelector(`[data-s="${j}"] input[data-f="kg"]`).value = showNum(val);
     });
   };
 
@@ -175,10 +175,23 @@ export function render(el, dayKey, mode = "") {
     const input = e.target.closest("input[data-f]");
     if (!input) return;
     const { i, s } = pos(input);
-    const val = input.value === "" ? "" : Number(input.value);
+    const val = parseNum(input.value);
+    if (val === null) return; // texto a medio escribir o inválido: se espera
     draft.items[i].sets[s][input.dataset.f] = val;
     if (input.dataset.f === "kg") carryKg(i, s, val);
     save();
+  }, on);
+
+  // Al tocar un número se selecciona completo, para reemplazarlo escribiendo; al salir se muestra normalizado.
+  el.addEventListener("focusin", (e) => {
+    const input = e.target.closest("input[data-f]");
+    if (input) setTimeout(() => input.select(), 0);
+  }, on);
+  el.addEventListener("focusout", (e) => {
+    const input = e.target.closest("input[data-f]");
+    if (!input) return;
+    const { i, s } = pos(input);
+    input.value = showNum(draft.items[i].sets[s][input.dataset.f]);
   }, on);
 
   el.addEventListener("click", (e) => {
@@ -218,7 +231,7 @@ export function render(el, dayKey, mode = "") {
       const cur = Number(item.sets[s][f]) || 0;
       const val = Math.max(0, Math.round((cur + (act === "inc" ? stepSize : -stepSize)) * 100) / 100);
       item.sets[s][f] = val;
-      btn.parentElement.querySelector("input").value = val;
+      btn.parentElement.querySelector("input").value = showNum(val);
       if (f === "kg") carryKg(i, s, val);
     } else if (act === "done") {
       const set = item.sets[s];
@@ -387,10 +400,24 @@ function cardHTML(item, i) {
     </article>`;
 }
 
+// Los campos de kg y reps son de texto: el teclado del iPhone en español escribe "12,5" con coma
+// y un <input type="number"> lo descartaba. Se aceptan coma o punto y se muestran con coma.
+function showNum(v) {
+  return v === "" || v == null ? "" : String(v).replace(".", ",");
+}
+
+function parseNum(text) {
+  const t = String(text).trim().replace(",", ".");
+  if (t === "") return "";
+  const n = Number(t.endsWith(".") ? t.slice(0, -1) : t);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null; // null = todavía no es un número válido
+}
+
 function numField(field, value, label) {
   return `<div class="num">
     <button data-act="dec" data-f="${field}" aria-label="Menos ${label}">−</button>
-    <label><input data-f="${field}" type="number" inputmode="decimal" step="any" min="0" value="${esc(value)}"><small>${label}</small></label>
+    <label><input data-f="${field}" type="text" inputmode="${field === "kg" ? "decimal" : "numeric"}" autocomplete="off" enterkeyhint="done"
+      value="${esc(showNum(value))}" aria-label="${label}"><small>${label}</small></label>
     <button data-act="inc" data-f="${field}" aria-label="Más ${label}">+</button>
   </div>`;
 }

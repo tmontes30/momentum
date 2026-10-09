@@ -1,6 +1,6 @@
 import { saveProfile, addBodyweight } from "../db.js";
 import { metrics, fmtKg } from "../calc.js";
-import { planOf, INTENSITY, PLAN_OPTIONS } from "../program.js";
+import { planOf, INTENSITY, PLAN_OPTIONS, SESSION_OPTIONS } from "../program.js";
 import { state, todayISO, addMonthsISO } from "../state.js";
 import { esc, go, toast } from "../ui.js";
 
@@ -45,6 +45,11 @@ export function goalFields(p = {}) {
         ${PLAN_OPTIONS.map((w) => `<option value="${w}" ${Number(p.planWeeks) === w ? "selected" : ""}>${w} semanas${w % 4 === 0 ? ` (${w / 4} ${w === 4 ? "mes" : "meses"})` : ""}</option>`).join("")}
       </select>
       <small class="muted">Todo el plan (adaptación, hipertrofia, fuerza y definición) se comprime en este plazo. Un plazo corto = un plan más exigente.</small></label>
+    <label class="field"><span>Tiempo por sesión</span>
+      <select name="sessionMinutes" class="select">
+        ${SESSION_OPTIONS.map((m) => `<option value="${m}" ${(Number(p.sessionMinutes) || 60) === m ? "selected" : ""}>${m} minutos</option>`).join("")}
+      </select>
+      <small class="muted">Incluye 5 min de calentamiento y deja 5 min al final para elongar. Si la rutina no cabe, se ajusta sola (primero accesorios y descansos; los ejercicios principales no se tocan).</small></label>
     <div class="field"><span>Intensidad</span>${seg("intensity", Object.entries(INTENSITY).map(([k, v]) => [k, v.label]), p.intensity || "moderada")}
       <small class="muted" id="intensity-hint">${INTENSITY[p.intensity || "moderada"].hint}</small></div>`;
 }
@@ -78,6 +83,7 @@ export function readProfileForm(form) {
   if (out.heightCm) out.heightCm = Number(out.heightCm);
   if (out.weightKg) out.weightKg = Number(out.weightKg);
   if ("planWeeks" in out) out.planWeeks = out.planWeeks ? Number(out.planWeeks) : null;
+  if ("sessionMinutes" in out) out.sessionMinutes = Number(out.sessionMinutes) || 60;
   return out;
 }
 

@@ -74,9 +74,9 @@ export const EXERCISES = {
   // ── Abdominales + full body ──────────────────────────
   rdl: { name: "Peso muerto rumano con barra", muscle: "Isquiotibiales, glúteos y espalda baja", equip: "Barra", region: "lower", type: "weight", coef: 0.6, inc: 5, step: 5, main: true, alt: "db_rdl",
     tip: "Barra pegada a las piernas, cadera atrás y espalda neutra. Sube apretando glúteos." },
-  lunges: { name: "Zancadas con mancuernas", muscle: "Piernas y glúteos", equip: "Mancuernas", region: "lower", type: "weight", coef: 0.1, inc: 2, step: 2, perSide: true, main: true, alt: "step_up",
+  lunges: { name: "Zancadas con mancuernas", muscle: "Piernas y glúteos", equip: "Mancuernas", region: "lower", type: "weight", coef: 0.1, inc: 2, step: 2, perSide: true, alt: "step_up",
     tip: "Paso largo; la rodilla de atrás casi toca el suelo. Reps por pierna." },
-  step_up: { name: "Subida al cajón", muscle: "Piernas y glúteos", equip: "Cajón + mancuernas", region: "lower", type: "weight", coef: 0.08, inc: 2, step: 2, perSide: true, main: true, alt: "lunges",
+  step_up: { name: "Subida al cajón", muscle: "Piernas y glúteos", equip: "Cajón + mancuernas", region: "lower", type: "weight", coef: 0.08, inc: 2, step: 2, perSide: true, alt: "lunges",
     tip: "Sube empujando con la pierna de arriba, sin impulsarte con la de abajo. Reps por pierna." },
   db_row: { name: "Remo con mancuerna a una mano", muscle: "Espalda", equip: "Mancuerna + banco", region: "upper", type: "weight", coef: 0.2, inc: 2, step: 2, perSide: true, alt: "cable_row",
     tip: "Rodilla y mano apoyadas en el banco. Lleva el codo hacia la cadera." },
@@ -104,6 +104,10 @@ export const EXERCISES = {
     tip: "Polea alta, tira en diagonal hacia la cadera contraria girando el torso con los brazos casi estirados. Reps por lado." },
   ab_wheel: { name: "Rueda abdominal", muscle: "Abdominales (antiextensión)", equip: "Rueda abdominal", region: "core", type: "bodyweight", reps: [6, 12], alt: "stir_pot",
     tip: "De rodillas, avanza la rueda con la espalda neutra y el abdomen apretado; vuelve antes de que se hunda la zona lumbar." },
+  incline_db_press: { name: "Press inclinado con mancuernas", muscle: "Pecho superior y hombros", equip: "Mancuernas + banco inclinado", region: "upper", type: "weight", coef: 0.15, inc: 2, step: 2, perSide: true, alt: "incline_machine_press",
+    tip: "Banco a 30-45°. Baja las mancuernas a los costados del pecho con los codos a 45° y empuja hacia arriba juntándolas sin chocarlas." },
+  incline_machine_press: { name: "Press inclinado en máquina", muscle: "Pecho superior y hombros", equip: "Máquina o Smith inclinado", region: "upper", type: "weight", coef: 0.35, inc: 5, step: 5, alt: "incline_db_press",
+    tip: "Ajusta el asiento para que las manijas queden a la altura de la parte alta del pecho. Empuja sin despegar la espalda." },
   stir_pot: { name: "Plancha con revolver en balón", muscle: "Abdominales (antiextensión)", equip: "Balón suizo", region: "core", type: "bodyweight", reps: [8, 12], alt: "ab_wheel",
     tip: "Antebrazos sobre el balón en posición de plancha; dibuja círculos pequeños sin mover la cadera. Reps por lado." },
 };
@@ -113,18 +117,24 @@ export const DAYS = {
     name: "Piernas y glúteos", short: "Piernas",
     warmup: "5 min de bicicleta o elíptica + 10 sentadillas sin peso + 10 puentes de glúteo.",
     exercises: ["leg_press", "goblet_squat", "hip_thrust", "leg_curl", "leg_ext", "abductor", "calf_raise"],
+    dropOrder: ["calf_raise", "abductor"],
+    stretch: ["Cuádriceps de pie · 30 s por lado", "Isquiotibiales sentado · 30 s por lado", "Glúteo en figura 4 · 30 s por lado", "Flexor de cadera en zancada · 30 s por lado", "Pantorrilla contra la pared · 30 s por lado"],
   },
   B: {
     name: "Brazos y tren superior", short: "Brazos",
     warmup: "5 min de remo o elíptica + círculos de brazos + 1 serie liviana de jalón y de press.",
     exercises: ["lat_pulldown", "db_press", "cable_row", "shoulder_press", "lateral_raise", "biceps_curl", "triceps_pushdown", "hammer_curl"],
+    dropOrder: ["hammer_curl", "lateral_raise"],
+    stretch: ["Pecho en el marco de una puerta · 45 s", "Dorsal con brazos arriba inclinado · 30 s por lado", "Hombro cruzado al pecho · 30 s por lado", "Tríceps sobre la cabeza · 30 s por lado", "Bíceps y antebrazo contra la pared · 30 s por lado"],
   },
   C: {
     name: "Abdominales + full body", short: "Abs",
     warmup: "5 min de caminadora inclinada + 10 bisagras de cadera + 10 dead bugs + 20 s de plancha para activar el abdomen.",
     // Bloque full body corto (3 básicos) y luego bloque de abdominales completo:
     // recto superior, abdomen bajo, oblicuos, antirrotación, antiextensión e isométrico.
-    exercises: ["rdl", "lunges", "db_row", "cable_crunch", "leg_raise", "russian_twist", "pallof", "ab_wheel", "plank"],
+    exercises: ["rdl", "lunges", "db_row", "incline_db_press", "cable_crunch", "leg_raise", "russian_twist", "pallof", "plank"],
+    dropOrder: ["db_row", "pallof"],
+    stretch: ["Cobra (abdomen) · 45 s", "Rotación de columna acostado · 30 s por lado", "Postura del niño · 45 s", "Isquiotibiales sentado · 30 s por lado", "Flexor de cadera en zancada · 30 s por lado"],
     finisher: "Circuito final: 4 rondas de 30 s intensos + 30 s suaves en bicicleta, remo o escaladora.",
   },
 };
@@ -256,6 +266,98 @@ export function prescription(exId, phase) {
   if (phase.deload) sets = Math.max(2, Math.round(sets * 0.6));
   const range = ex.type === "time" ? phase.time : ex.reps || phase.reps;
   return { sets, min: range[0], max: range[1], rest: phase.rest };
+}
+
+// ── Duración de la sesión ────────────────────────────────────────────────────
+// Ejercicios cuyas reps (o segundos) se cuentan por lado: duran el doble.
+const UNILATERAL = new Set(["lunges", "step_up", "db_row", "bulgarian", "cable_kickback", "woodchop", "pallof", "band_walk", "side_plank", "stir_pot"]);
+const SEC_PER_REP = 3.5;
+const TRANSITION_SEC = 60; // preparar máquina, cargar peso, anotar
+const PAIR_GAP_SEC = 15; // pasar del primer al segundo ejercicio de un par
+export const WARMUP_MIN = 5;
+export const STRETCH_MIN = 5;
+const FINISHER_MIN = 4;
+export const SESSION_OPTIONS = [45, 60, 75, 90];
+
+function setWorkSec(exId, rx) {
+  const avg = (rx.min + rx.max) / 2;
+  const work = EXERCISES[exId].type === "time" ? avg : avg * SEC_PER_REP;
+  return work * (UNILATERAL.has(exId) ? 2 : 1);
+}
+
+// Arma la sesión de un día para que quepa en `sessionMinutes` (incluye calentamiento y elongación final).
+// Si no cabe, recorta en este orden: accesorios a 2 series → descansos −15 s → sin circuito final → quitar accesorios (dropOrder).
+// Los ejercicios principales nunca se recortan.
+export function sessionPlan(dayKey, phase, sessionMinutes = 60) {
+  const day = DAYS[dayKey];
+  const budgetSec = (sessionMinutes - WARMUP_MIN - STRETCH_MIN) * 60;
+  let ids = [...day.exercises];
+  let finisher = Boolean(day.finisher || phase.superset || phase.finisher);
+  let accMode = 0; // 0 = sin recorte · 1 = accesorios (no abdominales) a 2 series · 2 = también abdominales
+  let restCut = 0;
+  const trimmable = (id, mode) => !EXERCISES[id].main && (mode === 2 || EXERCISES[id].region !== "core");
+  const trims = [];
+
+  const build = () => {
+    const slots = ids.map((exId) => {
+      const ex = EXERCISES[exId];
+      const rx = prescription(exId, phase);
+      const sets = accMode && trimmable(exId, accMode) ? Math.min(rx.sets, 2) : rx.sets;
+      return { exId, sets, rest: restCut ? Math.max(45, rx.rest - restCut) : rx.rest, rx, label: null, pairFirst: false };
+    });
+    // Pares: en fase de definición, todo en superseries; si no, los abdominales consecutivos van de a dos.
+    let pairs = 0;
+    for (let i = 0; i < slots.length - 1; i++) {
+      const a = slots[i], b = slots[i + 1];
+      const pairable = phase.superset || (EXERCISES[a.exId].region === "core" && EXERCISES[b.exId].region === "core");
+      if (!pairable) continue;
+      a.pairFirst = true;
+      a.label = String.fromCharCode(65 + pairs) + "1";
+      b.label = String.fromCharCode(65 + pairs) + "2";
+      pairs++;
+      i++;
+    }
+    let sec = 0;
+    for (const s of slots) {
+      const work = setWorkSec(s.exId, s.rx);
+      sec += TRANSITION_SEC + s.sets * (work + (s.pairFirst ? PAIR_GAP_SEC : s.rest));
+    }
+    if (finisher) sec += FINISHER_MIN * 60;
+    return { slots: slots.map(({ rx, ...s }) => s), finisher, sec };
+  };
+
+  const drops = day.dropOrder || [];
+  const drop = (id) => () => { ids = ids.filter((x) => x !== id); return `sin ${EXERCISES[id].name.toLowerCase()}`; };
+  const steps = [
+    () => {
+      if (!ids.some((id) => trimmable(id, 1) && prescription(id, phase).sets > 2)) return null;
+      accMode = 1;
+      return "accesorios a 2 series";
+    },
+    () => {
+      if (!ids.some((id) => prescription(id, phase).rest > 45)) return null;
+      restCut = 15;
+      return "descansos 15 s más cortos";
+    },
+    () => (finisher ? ((finisher = false), "sin circuito final") : null),
+    // Primero se quitan accesorios que no son abdominales; los abdominales se recortan al final.
+    ...drops.filter((id) => EXERCISES[id].region !== "core").map(drop),
+    () => {
+      if (!ids.some((id) => trimmable(id, 2) && !trimmable(id, 1) && prescription(id, phase).sets > 2)) return null;
+      accMode = 2;
+      return "abdominales a 2 series";
+    },
+    ...drops.filter((id) => EXERCISES[id].region === "core").map(drop),
+  ];
+  let plan = build();
+  for (const step of steps) {
+    if (plan.sec <= budgetSec) break;
+    const what = step();
+    if (what) trims.push(what);
+    plan = build();
+  }
+  const minutes = Math.round(plan.sec / 60) + WARMUP_MIN;
+  return { ...plan, trims, minutes, total: minutes + STRETCH_MIN, budget: sessionMinutes };
 }
 
 // Series de los ejercicios principales en una fase (para mostrar en resúmenes).

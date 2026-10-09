@@ -1,4 +1,4 @@
-import { EXERCISES, DAYS, prescription, supersetLabel, phaseFor, weekOf, weekStart } from "../program.js";
+import { EXERCISES, DAYS, prescription, phaseFor, weekOf, weekStart, sessionPlan, STRETCH_MIN } from "../program.js";
 import { exerciseHistory, suggestion, summarizeSets, workingWeight, fmtKg } from "../calc.js";
 import { addSession, updateSession, deleteSession } from "../db.js";
 import { state, program, sessionsInWeek, sessionWeek, sortSessions, isoDate, todayISO } from "../state.js";
@@ -11,6 +11,16 @@ const TREND_ICON = { up: "up", keep: "flat", down: "down", start: "info" };
 let teardown = null;
 // Sesiones anteriores al entrenamiento que se está viendo (base de sugerencias y "última vez").
 let pool = [];
+// Sesión ajustada al tiempo disponible (series, descansos y pares por posición) y su fase.
+let sess = null;
+let sessPhase = null;
+
+// Prescripción de la posición `i` con el ejercicio que esté ahí (puede ser la alternativa).
+function slotRx(i, exId) {
+  const base = prescription(exId, sessPhase);
+  const slot = sess?.slots[i];
+  return slot ? { ...base, sets: Math.min(base.sets, slot.sets), rest: slot.rest } : base;
+}
 
 // #/workout            → elegir día (semana actual)
 // #/workout/A          → nuevo entrenamiento, semana actual
@@ -41,6 +51,8 @@ export function render(el, dayKey, mode = "") {
   const on = { signal: ac.signal };
   const day = DAYS[dayKey];
   const phase = phaseFor(Math.max(1, weekOf(p.startDate, defaultDate)), plan);
+  sessPhase = phase;
+  sess = sessionPlan(dayKey, phase, Number(p.sessionMinutes) || 60);
 
   const refTime = editing ? new Date(editing.date) : targetWeek === current ? new Date(8.64e15) : endOfDay(weekEnd);
   pool = state.sessions.filter((s) => s.id !== editing?.id && new Date(s.date) < refTime);
@@ -48,12 +60,14 @@ export function render(el, dayKey, mode = "") {
   const draftKey = `momentum-draft-${state.user.uid}-${dayKey}-${editing ? `s-${editing.id}` : `w-${targetWeek}`}`;
   let draft = storage.get(draftKey);
   if (!draft || Date.now() - draft.startedAt > DRAFT_MAX_AGE) {
-    draft = { startedAt: Date.now(), date: defaultDate, items: editing ? itemsFromSession(editing, day, phase) : day.exercises.map((exId) => ({ exId, sets: freshSets(exId, phase) })) };
+    const ids = sess.slots.map((s) => s.exId);
+    draft = { startedAt: Date.now(), date: defaultDate, items: editing ? itemsFromSession(editing, ids) : ids.map((exId, i) => ({ exId, sets: freshSets(exId, slotRx(i, exId)) })) };
   }
   draft.date ||= defaultDate;
   const save = () => storage.set(draftKey, draft);
 
-  const finisher = day.finisher || (phase.superset || phase.finisher ? "Circuito final: 4 rondas de 30 s intensos + 30 s suaves en bicicleta, remo o escaladora." : null);
+  const finisher = sess.finisher ? day.finisher || "Circuito final: 4 rondas de 30 s intensos + 30 s suaves en bicicleta, remo o escaladora." : null;
+  const hasPairs = sess.slots.some((s) => s.label);
   const minDate = isoDate(weekStart(p.startDate, 1));
   const backHref = targetWeek === current ? "#/home" : `#/home/${targetWeek}`;
   const title = editing ? "Editar entrenamiento" : targetWeek === current ? day.name : "Registrar entrenamiento";
@@ -63,7 +77,7 @@ export function render(el, dayKey, mode = "") {
       <header class="top sticky">
         <a class="icon-btn" href="${backHref}" aria-label="Volver">${icon("back")}</a>
         <div class="grow"><h1 class="h-sm">${title}</h1>
-          <p class="muted small">${editing || targetWeek !== current ? `${day.name} · ` : ""}Día ${dayKey} · ${phase.name}${phase.deload ? " · Descarga" : ""}</p></div>
+          <p class="muted small">${editing || targetWeek !== current ? `${day.name} · ` : ""}Día ${dayKey} · ${phase.name}${phase.deload ? " · Descarga" : ""}${editing ? "" : ` · ~${sess.total} min`}</p></div>
         <button class="icon-btn" id="reset" aria-label="${editing ? "Descartar cambios" : "Reiniciar entrenamiento"}" title="${editing ? "Descartar cambios" : "Reiniciar"}">${icon("reset")}</button>
       </header>
       <label class="card date-card">
@@ -71,15 +85,24 @@ export function render(el, dayKey, mode = "") {
         <span class="grow"><b>Fecha</b><small id="date-week" class="muted">${weekLabel(draft.date)}</small></span>
         <input type="date" id="date" value="${draft.date}" min="${minDate}" max="${todayISO()}" required>
       </label>
-      ${editing || targetWeek !== current ? "" : `<details class="card warmup"><summary>${icon("timer")} Calentamiento · 5–8 min</summary><p>${day.warmup}</p></details>`}
-      ${phase.superset && !editing ? `<div class="notice">${icon("zap")}<p><b>Superseries.</b> Haz A1 y A2 seguidos, descansa y repite. Luego B1/B2, etc.</p></div>` : ""}
-      <div id="list">${draft.items.map((it, i) => cardHTML(it, i, phase)).join("")}</div>
+      ${editing ? "" : `<div class="notice">${icon("timer")}<p><b>~${sess.minutes} min + ${STRETCH_MIN} min de elongación</b> (calentamiento incluido)${sess.trims.length
+        ? `. Ajustado a tus ${sess.budget} min: ${sess.trims.join(", ")}.` : `, dentro de tus ${sess.budget} min.`}</p></div>`}
+      ${editing || targetWeek !== current ? "" : `<details class="card warmup"><summary>${icon("timer")} Calentamiento · 5 min</summary><p>${day.warmup}</p></details>`}
+      ${hasPairs && !editing ? `<div class="notice">${icon("zap")}<p>${phase.superset
+        ? "<b>Superseries.</b> Haz A1 y A2 seguidos, descansa y repite. Luego B1/B2, etc."
+        : "<b>Abdominales en pares.</b> Haz A1 y A2 seguidos sin descanso entre ellos; descansa al terminar el par. Luego B1/B2."}</p></div>` : ""}
+      <div id="list">${draft.items.map((it, i) => cardHTML(it, i)).join("")}</div>
       ${finisher && !editing ? `<div class="card"><h3 class="h-ico">${icon("flag")} Finisher</h3><p class="muted">${finisher}</p></div>` : ""}
+      ${editing || !day.stretch ? "" : `<div class="card stretch">
+        <h3 class="h-ico">${icon("timer")} Elongación · ${STRETCH_MIN} min</h3>
+        <ol class="steps-list">${day.stretch.map((s) => `<li>${s}</li>`).join("")}</ol>
+        <button class="btn btn-block" id="stretch">Iniciar elongación ${STRETCH_MIN}:00</button>
+      </div>`}
       ${editing ? `<button class="btn btn-block btn-ghost danger" id="delete">Eliminar este entrenamiento</button>`
         : `<p class="small muted center">Marca cada serie al terminarla para iniciar el descanso.</p>`}
     </div>
     <div class="rest-bar" id="rest" hidden>
-      <span>Descanso</span><b id="rest-time">0:00</b>
+      <span id="rest-label">Descanso</span><b id="rest-time">0:00</b>
       <button class="btn btn-sm" data-rest="15">+15 s</button>
       <button class="btn btn-sm" data-rest="skip">Saltar</button>
     </div>
@@ -87,7 +110,7 @@ export function render(el, dayKey, mode = "") {
 
   const list = el.querySelector("#list");
   const replaceCard = (i) => {
-    list.querySelector(`[data-i="${i}"]`).outerHTML = cardHTML(draft.items[i], i, phase);
+    list.querySelector(`[data-i="${i}"]`).outerHTML = cardHTML(draft.items[i], i);
   };
 
   // Al cambiar el peso de una serie, las siguientes aún sin marcar toman el mismo peso.
@@ -103,15 +126,22 @@ export function render(el, dayKey, mode = "") {
   // ── Temporizador de descanso ──
   const restBar = el.querySelector("#rest");
   const restTime = el.querySelector("#rest-time");
+  const restLabel = el.querySelector("#rest-label");
   let restEnd = 0;
   let timer = null;
+  let stretching = false;
   const stopRest = () => { clearInterval(timer); timer = null; restBar.hidden = true; };
   const tick = () => {
     const left = Math.max(0, Math.ceil((restEnd - Date.now()) / 1000));
     restTime.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
-    if (left <= 0) { stopRest(); alertDone(); toast("Descanso terminado. Siguiente serie."); }
+    if (left <= 0) {
+      stopRest(); alertDone();
+      toast(stretching ? "Elongación terminada. Que tengas un buen día." : "Descanso terminado. Siguiente serie.");
+    }
   };
-  const startRest = (secs) => {
+  const startRest = (secs, label = "Descanso") => {
+    stretching = label !== "Descanso";
+    restLabel.textContent = label;
     restEnd = Date.now() + secs * 1000;
     restBar.hidden = false;
     tick();
@@ -153,6 +183,7 @@ export function render(el, dayKey, mode = "") {
     }
     if (btn.id === "finish") return finish(btn);
     if (btn.id === "delete") return remove(btn);
+    if (btn.id === "stretch") return startRest(STRETCH_MIN * 60, "Elongación");
 
     const act = btn.dataset.act;
     if (!act) return;
@@ -173,9 +204,8 @@ export function render(el, dayKey, mode = "") {
       set.done = !set.done;
       btn.closest(".set-row").classList.toggle("done", set.done);
       if (set.done && !editing && targetWeek === current) {
-        // En superseries se descansa después del segundo ejercicio del par.
-        const pairFirst = phase.superset && i % 2 === 0 && i + 1 < draft.items.length;
-        if (!pairFirst) startRest(prescription(item.exId, phase).rest);
+        // En los pares (superseries o abdominales) se descansa después del segundo ejercicio.
+        if (!sess.slots[i]?.pairFirst) startRest(slotRx(i, item.exId).rest);
       }
     } else if (act === "add") {
       const last = item.sets[item.sets.length - 1] || { kg: "", reps: "" };
@@ -187,7 +217,7 @@ export function render(el, dayKey, mode = "") {
     } else if (act === "swap") {
       if (item.sets.some((x) => x.done) && !confirm("Ya anotaste series en este ejercicio. ¿Cambiarlo igual?")) return;
       item.exId = ex.alt;
-      item.sets = freshSets(item.exId, phase);
+      item.sets = freshSets(item.exId, slotRx(i, item.exId));
       replaceCard(i);
       toast(`Cambiado a ${EXERCISES[item.exId].name}`);
     }
@@ -277,12 +307,12 @@ function weekLabel(iso) {
 }
 
 // Reconstruye las tarjetas desde un entrenamiento guardado, en el orden del día.
-function itemsFromSession(session, day, phase) {
+function itemsFromSession(session, ids) {
   const saved = (session.exercises || []).map((e) => ({ exId: e.exId, sets: e.sets.map((s) => ({ ...s, done: true })) }));
   const used = new Set();
-  const items = day.exercises.map((exId) => {
+  const items = ids.map((exId, i) => {
     const hit = saved.find((e, idx) => !used.has(idx) && (e.exId === exId || e.exId === EXERCISES[exId].alt) && used.add(idx));
-    return hit || { exId, sets: freshSets(exId, phase) };
+    return hit || { exId, sets: freshSets(exId, slotRx(i, exId)) };
   });
   saved.forEach((e, idx) => { if (!used.has(idx)) items.push(e); });
   return items;
@@ -294,21 +324,20 @@ function pos(node) {
   return { i: Number(card.dataset.i), s: row ? Number(row.dataset.s) : -1 };
 }
 
-function freshSets(exId, phase) {
-  const rx = prescription(exId, phase);
+function freshSets(exId, rx) {
   const sug = suggestion(exId, exerciseHistory(pool, exId), state.profile, rx);
   return Array.from({ length: rx.sets }, () => ({ kg: sug.kg ?? "", reps: sug.reps, done: false }));
 }
 
-function cardHTML(item, i, phase) {
+function cardHTML(item, i) {
   const ex = EXERCISES[item.exId];
-  const rx = prescription(item.exId, phase);
+  const rx = slotRx(i, item.exId);
   const history = exerciseHistory(pool, item.exId);
   const sug = suggestion(item.exId, history, state.profile, rx);
   const last = history[history.length - 1];
   const unit = ex.type === "time" ? "s" : "reps";
   const hasKg = ex.type === "weight";
-  const ss = supersetLabel(i, phase);
+  const ss = sess?.slots[i]?.label;
 
   const rows = item.sets.map((set, s) => `
     <div class="set-row ${set.done ? "done" : ""}" data-s="${s}">

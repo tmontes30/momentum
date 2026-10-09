@@ -87,6 +87,7 @@ users/{uid}                    perfil
   level ('principiante'|'intermedio'), goal ('tonificar'|'bajar grasa'|'ganar músculo'),
   eventName (opcional, ej. "el matrimonio"), targetDate 'YYYY-MM-DD', startDate 'YYYY-MM-DD',
   planWeeks (número o null = hasta targetDate), intensity ('moderada'|'alta'|'maxima', por defecto moderada),
+  sessionMinutes (45|60|75|90, por defecto 60),
   photoURL, createdAt, updatedAt
 users/{uid}/sessions/{id}      un entrenamiento terminado
   date (ISO), dayKey 'A'|'B'|'C', week, phase, durationMin,
@@ -116,7 +117,12 @@ users/{uid}/bodyweight/{id}    registro de peso corporal
 ## Lógica de entrenamiento
 
 - **3 días:** A = Piernas y glúteos, B = Brazos y tren superior, C = Abdominales + full body. Cada ejercicio tiene `alt` (alternativa si la máquina está ocupada).
-- **Día C desde el 2026-10-06:** 3 básicos full body (peso muerto rumano, zancadas, remo con mancuerna) y un bloque de abdominales (crunch en polea, elevación de piernas, giro ruso, pallof press, rueda abdominal y plancha). Las flexiones salieron del día. Las sesiones antiguas conservan sus ejercicios: al editarlas, los que ya no están en el día aparecen al final.
+- **Día C desde el 2026-10-08:** básicos full body (peso muerto rumano, zancadas, remo con mancuerna y press inclinado con mancuernas) y un bloque de abdominales (crunch en polea, elevación de piernas, giro ruso, pallof press y plancha). Las flexiones salieron el 2026-10-06; la rueda abdominal entró ese día y se cambió por el press inclinado el 2026-10-08. Las zancadas pasaron a ser accesorio. Las sesiones antiguas conservan sus ejercicios: al editarlas, los que ya no están en el día aparecen al final.
+- **Tiempo por sesión** (`profile.sessionMinutes`, 60 por defecto): `sessionPlan()` en `program.js` estima la duración (3,5 s por rep, el doble si es por lado, + descanso + 60 s de cambio por ejercicio + 5 min de calentamiento) y reserva 5 min de elongación al final.
+  - Si no cabe, recorta en este orden: accesorios no abdominales a 2 series → descansos −15 s (mínimo 45 s) → sin circuito final → quitar accesorios de `dropOrder` que no son abdominales → abdominales a 2 series → quitar abdominales de `dropOrder`. Los ejercicios principales nunca se recortan.
+  - Los abdominales consecutivos van en pares (A1/A2), con 15 s entre ellos; en la fase de definición se hacen superseries de todo.
+  - Cada día tiene `stretch` (5 estiramientos) y la pantalla de entrenamiento tiene un botón de elongación de 5:00.
+  - Las pruebas verifican que todas las combinaciones de día × fase × intensidad caben en 60 min.
 - **Plan** (`planOf` / `buildPlan` en `program.js`). Lo definen dos campos del perfil:
   - `planWeeks` es el plazo para ver cambios (6-24 semanas). Si es `null`, el plan dura hasta `targetDate` y termina con "Afinado final". Si tiene valor, el plan es más corto que la fecha objetivo y no tiene afinado.
   - `intensity` puede ser `moderada`, `alta` o `maxima` (ver `INTENSITY`). Define las semanas de adaptación (3, 2 o 1; con nivel intermedio, una menos), la frecuencia de las descargas (cada 6 semanas, cada 8 o nunca), las series extra (+1 en principales en alta; +1 en todo en máxima; máximo 5), el descanso (−15 s desde la fase 2) y el finisher diario (solo en máxima).

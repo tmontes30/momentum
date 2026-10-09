@@ -1,4 +1,4 @@
-import { DAYS, DAY_KEYS, phaseFor, weekStart, mainSets, INTENSITY } from "../program.js";
+import { DAYS, DAY_KEYS, phaseFor, weekStart, mainSets, INTENSITY, sessionPlan } from "../program.js";
 import { fmtKg } from "../calc.js";
 import { state, program, sessionsInWeek, nextDay, daysUntil, completeWeeks, isoDate as isoOf } from "../state.js";
 import { esc, icon, fmtDate } from "../ui.js";
@@ -60,7 +60,10 @@ export function render(el, weekParam) {
     : days === 0 ? `<div class="big">Hoy</div><div class="hero-sub">Es el día de ${eventName}. Mucho éxito.</div>`
     : `<div class="big">Meta alcanzada</div><div class="hero-sub">Sigue entrenando en modo mantención.</div>`;
 
-  const cards = weekCards(week, (k) => `Día ${k} · ${DAYS[k].exercises.length} ejercicios · ~50 min`);
+  const cards = weekCards(week, (k) => {
+    const sp = sessionPlan(k, phase, Number(p.sessionMinutes) || 60);
+    return `Día ${k} · ${sp.slots.length} ejercicios · ~${sp.total} min`;
+  });
 
   el.innerHTML = `
     <div class="screen">

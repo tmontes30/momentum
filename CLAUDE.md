@@ -208,5 +208,7 @@ Para verificaciones automáticas sin navegador visible se usa **Edge headless**
   - **Porciones:** se resuelven para cumplir a la vez las calorías y la proteína. Valores por porción: carbohidratos 140 kcal, verduras 25, fruta 65, lácteos 70, proteína 65 (11 g), grasas 180.
   - **Calibración:** se hizo con dos pautas reales de una nutricionista deportiva (las de Tomás y Cata). Con sus datos, el resultado coincide o difiere en ½ porción.
   - El usuario pidió **no** permitir cargar ni editar pautas externas: solo existe el plan calculado.
+  - Alimentación es una **pestaña de la barra inferior**: Inicio · Entrenar · Alimentación · Progreso · Perfil. Arriba muestra un aviso de "Plan aproximado". En Perfil, el botón "Ver tu plan de alimentación ›" lleva a esa pestaña.
+  - `index.html` tiene un bloque de Google Analytics que agregó el usuario, con un ID de ejemplo (`G-XXXXXXXXXX`). No se carga en localhost.
   - Los PDFs están en la carpeta local `Pauta nutricional/` y **no se publican**: `publish.ps1` excluye esa carpeta y todos los `.pdf`, porque el repo es público y son datos de salud.
 - Pendiente de confirmar con el usuario: restricción de la API key en Google Cloud y si el login de Google ya muestra "Momentum" en vez de la URL (si no, evaluar la opción del dominio propio).

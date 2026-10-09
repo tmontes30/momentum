@@ -10,7 +10,7 @@ import * as profile from "./views/profile.js";
 import * as nutrition from "./views/nutrition.js";
 
 const views = { login, onboarding, home, workout, progress, profile, nutrition };
-const NAV_VIEWS = ["home", "workout", "progress", "profile"];
+const NAV_VIEWS = ["home", "workout", "nutrition", "progress", "profile"];
 
 const main = document.getElementById("view");
 const nav = document.getElementById("nav");

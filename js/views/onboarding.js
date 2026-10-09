@@ -3,7 +3,7 @@ import { metrics, fmtKg } from "../calc.js";
 import { planOf, INTENSITY, PLAN_OPTIONS, SESSION_OPTIONS } from "../program.js";
 import { planFor } from "../nutrition.js";
 import { state, todayISO, addMonthsISO } from "../state.js";
-import { esc, go, toast } from "../ui.js";
+import { esc, go, toast, icon } from "../ui.js";
 
 // ── Piezas reutilizadas por la pantalla de perfil ───────────────────────────
 function seg(name, options, value) {
@@ -109,7 +109,7 @@ export function metricsHTML(p, { link = false } = {}) {
     <p class="small muted">Estimado con tu masa libre de grasa (${fmtKg(m.ffm)} kg) y tu objetivo:
       ${plan.protein} g proteína · ${plan.cho} g carbohidratos · ${plan.fat} g grasa · ${fmtKg(plan.water)} L de agua.
       Son orientaciones: si tienes alguna condición médica, consulta a un profesional.</p>
-    ${link ? `<a class="btn btn-block" href="#/nutrition">Ver plan de alimentación: desayuno, almuerzo, colación y cena</a>` : ""}`;
+    ${link ? `<a class="btn btn-block btn-link-arrow" href="#/nutrition"><span>Ver tu plan de alimentación</span>${icon("next")}</a>` : ""}`;
 }
 
 // ── Pantalla de onboarding ──────────────────────────────────────────────────

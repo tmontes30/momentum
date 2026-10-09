@@ -578,6 +578,8 @@ a.chip { text-decoration: none; }
 
 /* ── Alimentación ── */
 .tiles-link { color: inherit; text-decoration: none; }
+.btn-link-arrow { justify-content: space-between; margin-top: 4px; }
+.btn-link-arrow .ico { color: var(--accent); }
 .tiles-link .tile { transition: transform 0.08s; }
 .tiles-link:active .tile { transform: scale(0.98); }
 .meals { display: flex; flex-direction: column; gap: 10px; }

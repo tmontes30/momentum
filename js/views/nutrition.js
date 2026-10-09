@@ -13,13 +13,14 @@ export function render(el) {
 
   el.innerHTML = `
     <div class="screen">
-      <header class="top">
-        <a class="icon-btn" href="#/profile" aria-label="Volver">${icon("back")}</a>
-        <div class="grow"><p class="eyebrow">Plan aproximado</p><h1 class="h-sm">Alimentación</h1></div>
+      <header>
+        <h1>Alimentación</h1>
+        <p class="muted small">Tu plan diario por comidas</p>
       </header>
 
-      <div class="notice">${icon("info")}<p>Calculado con tu peso, estatura, edad, sexo y objetivo, siguiendo cómo arma las pautas
-        una nutricionista deportiva (régimen por porciones, alto en proteína). Si cambias tus datos en Perfil, se recalcula.</p></div>
+      <div class="notice warn">${icon("info")}<p><b>Plan aproximado.</b> Se calcula automáticamente con tu peso, estatura, edad, sexo y objetivo,
+        siguiendo cómo arma las pautas una nutricionista deportiva. Es una orientación general y <b>no reemplaza la evaluación de un
+        nutricionista</b>. Si cambias tus datos en Perfil, se recalcula.</p></div>
 
       <section class="tiles tiles-2">
         <div class="tile"><b>${plan.kcal.toLocaleString("es")}</b><span>kcal al día</span></div>

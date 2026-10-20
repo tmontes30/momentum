@@ -65,7 +65,8 @@ function renderSetup() {
 }
 
 function renderLoading() {
-  main.innerHTML = `<div class="screen center"><div class="spinner" aria-label="Cargando"></div></div>`;
+  // Mismo cargador que trae index.html: el logo "respirando" (crece y se achica suave).
+  main.innerHTML = `<div class="screen center"><div class="loader" role="status" aria-label="Cargando">${logo(72)}</div></div>`;
 }
 
 if (!isConfigured) {

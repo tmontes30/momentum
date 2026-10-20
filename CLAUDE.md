@@ -160,7 +160,7 @@ Para verificaciones automáticas sin navegador visible se usa **Edge headless**
 (`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`):
 - `--headless=new --dump-dom URL` o `--screenshot=archivo.png --window-size=390,1700`.
 - La ventana headless tiene un ancho mínimo de ~504 px. Para ver el ancho de celular (390 px) hay que cargar la página dentro de un `<iframe>` de 390 px.
-- `--dump-dom` captura antes de que Firebase Auth responda (se ve solo el spinner). Para leer la página ya cargada hay que usar el protocolo DevTools (`--remote-debugging-port`) y evaluar `document.getElementById('view').innerText` después de unos segundos.
+- `--dump-dom` captura antes de que Firebase Auth responda (se ve solo el cargador con el logo). Para leer la página ya cargada hay que usar el protocolo DevTools (`--remote-debugging-port`) y evaluar `document.getElementById('view').innerText` después de unos segundos.
 - Para probar pantallas sin login: una página que importe `js/state.js`, rellene `state.user/profile/sessions` con datos falsos y llame a `views/<vista>.js` → `render(el)`.
 
 ## Solución de problemas
@@ -169,7 +169,7 @@ Para verificaciones automáticas sin navegador visible se usa **Edge headless**
 |---|---|
 | La página no carga / 404 | Revisar https://github.com/tmontes30/momentum/settings/pages (debe decir rama `main`, carpeta `/`). Ver el último build con `gh api repos/tmontes30/momentum/pages/builds/latest`. Revisar que `index.html` esté en la raíz del repo. Si falla cavedevz.com, probar tmontes30.github.io/momentum y revisar el DNS del dominio. |
 | Pantalla "Falta configurar Firebase" | `js/firebase-config.js` tiene la configuración de ejemplo. Volver a pegar la configuración de arriba. |
-| Se queda en el spinner | Error de JS o CDN caído. Abrir la consola del navegador (F12). Verificar que carguen `gstatic.com/firebasejs/10.12.2/...`. |
+| Se queda en el cargador (logo animado) | Error de JS o CDN caído. Abrir la consola del navegador (F12). Verificar que carguen `gstatic.com/firebasejs/10.12.2/...`. |
 | Error `auth/unauthorized-domain` | Falta el dominio en Authentication → Configuración → Dominios autorizados (`cavedevz.com`). |
 | Error `auth/api-key-not-valid` o `requests-from-referer-blocked` | La API key está restringida sin incluir el dominio. Agregarlo en Google Cloud → Credenciales (incluir `gimnasio-3905f.firebaseapp.com/*`). |
 | Popup de Google bloqueado | La app intenta redirect automáticamente. En iPhone, permitir popups para el sitio o abrir en Safari (no en el navegador interno de WhatsApp o Instagram). |
@@ -211,4 +211,5 @@ Para verificaciones automáticas sin navegador visible se usa **Edge headless**
   - Alimentación es una **pestaña de la barra inferior**: Inicio · Entrenar · Alimentación · Progreso · Perfil. Arriba muestra un aviso de "Plan aproximado". En Perfil, el botón "Ver tu plan de alimentación ›" lleva a esa pestaña.
   - `index.html` tiene un bloque de Google Analytics que agregó el usuario, con un ID de ejemplo (`G-XXXXXXXXXX`). No se carga en localhost.
   - Los PDFs están en la carpeta local `Pauta nutricional/` y **no se publican**: `publish.ps1` excluye esa carpeta y todos los `.pdf`, porque el repo es público y son datos de salud.
+- 2026-10-20: el cargador ya no es un círculo girando: es el **logo de Momentum "respirando"** (`.loader` con animación `breathe` de 1,6 s en `styles.css`). Viene en `index.html` para verse desde el primer instante, y `renderLoading()` en `app.js` lo repite. Con "reducir movimiento" activado, el logo queda quieto.
 - Pendiente de confirmar con el usuario: restricción de la API key en Google Cloud y si el login de Google ya muestra "Momentum" en vez de la URL (si no, evaluar la opción del dominio propio).

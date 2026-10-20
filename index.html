@@ -34,7 +34,16 @@
   <!-- /Google Analytics -->
 </head>
 <body>
-  <main id="view"></main>
+  <main id="view">
+    <!-- Cargador visible desde el primer instante, antes de que cargue el JS (app.js lo reemplaza). -->
+    <div class="screen center"><div class="loader" role="status" aria-label="Cargando">
+      <svg class="logo" width="72" height="72" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="lg0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#9333ea"/></linearGradient></defs>
+        <rect width="64" height="64" rx="16" fill="url(#lg0)"/>
+        <path d="M14 44l11-14 8 8 15-18M38 20h10v10" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div></div>
+  </main>
 
   <nav id="nav" class="nav" hidden>
     <a href="#/home" data-view="home">

@@ -144,18 +144,19 @@ export function render(el, dayKey, mode = "") {
   const restLabel = el.querySelector("#rest-label");
   let restEnd = 0;
   let timer = null;
-  let stretching = false;
+  let doneMsg = "";
   const stopRest = () => { clearInterval(timer); timer = null; restBar.hidden = true; };
   const tick = () => {
     const left = Math.max(0, Math.ceil((restEnd - Date.now()) / 1000));
     restTime.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
     if (left <= 0) {
       stopRest(); alertDone();
-      toast(stretching ? "Elongación terminada. Que tengas un buen día." : "Descanso terminado. Siguiente serie.");
+      toast(doneMsg);
     }
   };
-  const startRest = (secs, label = "Descanso") => {
-    stretching = label !== "Descanso";
+  // label: texto de la barra · msg: aviso al terminar.
+  const startRest = (secs, label = "Descanso", msg = "Descanso terminado. Siguiente serie.") => {
+    doneMsg = msg;
     restLabel.textContent = label;
     restEnd = Date.now() + secs * 1000;
     restBar.hidden = false;
@@ -217,7 +218,7 @@ export function render(el, dayKey, mode = "") {
     }
     if (btn.id === "finish") return finish(btn);
     if (btn.id === "delete") return remove(btn);
-    if (btn.id === "stretch") return startRest(STRETCH_MIN * 60, "Elongación");
+    if (btn.id === "stretch") return startRest(STRETCH_MIN * 60, "Elongación", "Elongación terminada. Que tengas un buen día.");
 
     const act = btn.dataset.act;
     if (!act) return;
@@ -238,8 +239,17 @@ export function render(el, dayKey, mode = "") {
       set.done = !set.done;
       btn.closest(".set-row").classList.toggle("done", set.done);
       if (set.done && !editing && targetWeek === current) {
-        // En los pares (superseries o abdominales) se descansa después del segundo ejercicio.
-        if (!sess.slots[i]?.pairFirst) startRest(slotRx(i, item.exId).rest);
+        // En los pares (superseries o abdominales) el descanso va después del segundo ejercicio;
+        // tras el primero corre un contador corto de cambio que dice qué ejercicio sigue.
+        const slot = sess.slots[i];
+        const partner = draft.items[i + 1];
+        if (slot?.pairFirst && partner) {
+          const next = `${sess.slots[i + 1]?.label || ""} ${EXERCISES[partner.exId].name}`.trim();
+          startRest(15, "Cambio", `Ahora: ${next}`);
+          toast(`Sigue con ${next}`);
+        } else {
+          startRest(slotRx(i, item.exId).rest);
+        }
       }
     } else if (act === "add") {
       const last = item.sets[item.sets.length - 1] || { kg: "", reps: "" };
